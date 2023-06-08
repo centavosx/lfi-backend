@@ -21,6 +21,7 @@ export enum UserStatus {
   ACTIVE = 'active',
   PENDING = 'pending',
   CANCELED = 'cancelled',
+  VERIFIED = 'verified',
 }
 
 export enum CollegeEnum {

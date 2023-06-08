@@ -144,7 +144,7 @@ export class BaseService {
 
   public async verifyUser(code: string, user: User) {
     if (user.code === code) {
-      user.status = UserStatus.ACTIVE;
+      user.status = UserStatus.VERIFIED;
       user.code = null;
       const newU = await this.userRepository.save(user);
       const tokens = await this.tokenService.generateTokens(newU);
@@ -211,27 +211,29 @@ export class BaseService {
 
       user = await this.userRepository.save(newUser);
 
-      if (isVerification) {
-        await this.mailService.sendMail(
-          user.email,
-          'Please verify your account',
-          'verification-user',
-          {
-            name: `${user.lname}, ${user.fname} ${user.mname}`,
-            code: user.code,
-          },
-        );
-      } else {
-        await this.mailService.sendMail(
-          user.email,
-          'Your admin account',
-          'new-admin-user',
-          {
-            name: `${user.lname}, ${user.fname} ${user.mname}`,
-            password: pw,
-          },
-        );
-      }
+      try {
+        if (isVerification) {
+          await this.mailService.sendMail(
+            user.email,
+            'Please verify your account',
+            'verification-user',
+            {
+              name: `${user.lname}, ${user.fname} ${user.mname}`,
+              code: user.code,
+            },
+          );
+        } else {
+          await this.mailService.sendMail(
+            user.email,
+            'Your admin account',
+            'new-admin-user',
+            {
+              name: `${user.lname}, ${user.fname} ${user.mname}`,
+              password: pw,
+            },
+          );
+        }
+      } catch {}
 
       await queryRunner.commitTransaction();
     } catch (err) {
@@ -262,14 +264,19 @@ export class BaseService {
     if (!!isUserExist) {
       if (isUserExist.status === UserStatus.EXPELLED)
         throw new ForbiddenException('This user is expelled');
-      if (isUserExist.status === UserStatus.ACTIVE)
+      if (
+        isUserExist.status === UserStatus.ACTIVE ||
+        isUserExist.status === UserStatus.VERIFIED
+      )
         throw new ConflictException('This user already exist');
       dataToSave = isUserExist;
     }
 
     const role = await this.roleRepository.find({
       where: {
-        name: In((dataToSave as CreateUserFromAdminDto).role) ?? Roles.USER,
+        name: !!(dataToSave as CreateUserFromAdminDto).role
+          ? In((dataToSave as CreateUserFromAdminDto).role)
+          : Roles.USER,
       },
     });
 
@@ -309,7 +316,14 @@ export class BaseService {
       relations: ['roles'],
     });
 
-    if (!user || user.status === UserStatus.ACTIVE)
+    if (!user || user.status === UserStatus.EXPELLED)
+      throw new NotFoundException('This user is expelled');
+
+    if (
+      !user ||
+      user.status === UserStatus.PENDING ||
+      user.status === UserStatus.CANCELED
+    )
       throw new NotFoundException('User not found');
 
     if (!(await ifMatched(data.password, user.password)))
