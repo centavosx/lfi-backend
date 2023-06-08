@@ -3,11 +3,6 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Level, UserStatus } from '../../../enum';
 
 export class UserInfoDto {
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  id: string;
-
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

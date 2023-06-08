@@ -398,7 +398,12 @@ export class BaseService {
     return;
   }
 
-  public async updateUsers({ id, password, old, ...rest }: UserInfoDto) {
+  public async updateUsers({
+    id,
+    password,
+    old,
+    ...rest
+  }: UserInfoDto & { id: string }) {
     const userData = await this.userRepository.findOne({
       where: {
         id,
