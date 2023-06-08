@@ -36,53 +36,53 @@ export class User {
 
   @Exclude()
   @Column({ nullable: true })
-  password: string | null;
+  password?: string | null;
 
   @Column({ nullable: true })
-  address: string;
+  address?: string | null;
 
-  @Column({ nullable: false })
-  level: Level;
+  @Column({ nullable: true })
+  level?: Level | null;
 
-  @Column({ nullable: false })
-  program: string;
+  @Column({ nullable: true })
+  program?: string | null;
 
-  @Column({ nullable: false, name: 'id_pic' })
-  idPic: string;
+  @Column({ nullable: true, name: 'id_pic' })
+  idPic?: string | null;
 
-  @Column({ nullable: false })
-  ncae: string;
+  @Column({ nullable: true })
+  ncae?: string | null;
 
-  @Column({ nullable: false })
-  certificate: string;
+  @Column({ nullable: true })
+  certificate?: string | null;
 
-  @Column({ nullable: false })
-  pantawid: string;
+  @Column({ nullable: true })
+  pantawid?: string | null;
 
-  @Column({ nullable: false, name: 'grade_slip' })
-  gradeSlip: string;
+  @Column({ nullable: true, name: 'grade_slip' })
+  gradeSlip?: string | null;
 
-  @Column({ nullable: false, name: 'birth_cert' })
-  birthCert: string;
+  @Column({ nullable: true, name: 'birth_cert' })
+  birthCert?: string | null;
 
-  @Column({ nullable: false, name: 'home_sketch' })
-  homeSketch: string;
+  @Column({ nullable: true, name: 'home_sketch' })
+  homeSketch?: string | null;
 
   @Column({ nullable: true, name: 'water_bill' })
-  waterBill?: string;
+  waterBill?: string | null;
 
   @Column({ nullable: true, name: 'electric_bill' })
-  electricBill?: string;
+  electricBill?: string | null;
 
   @Column({ nullable: true, name: 'wifi_bill' })
-  wifiBill?: string;
+  wifiBill?: string | null;
 
   @Column({ nullable: true, name: 'enrollment_bill' })
-  enrollmentBill?: string;
+  enrollmentBill?: string | null;
 
   @Exclude()
   @Column({ nullable: true, default: null })
-  code?: string;
+  code?: string | null;
 
   @ManyToMany(() => Role, (role) => role.users, {
     eager: true,
@@ -101,5 +101,5 @@ export class User {
   modified: Date;
 
   @DeleteDateColumn()
-  deleted: Date | null;
+  deleted?: Date | null;
 }

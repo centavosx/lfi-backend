@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Level, UserStatus } from '../../../enum';
 
 export class UserInfoDto {
   @ApiProperty()
@@ -9,21 +10,193 @@ export class UserInfoDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  name: string;
+  @IsString()
+  fname?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  position: string;
+  @IsString()
+  mname?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  description: string;
+  @IsString()
+  lname?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  password: string;
+  @IsString()
+  address?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  old: string;
+  @IsEnum(Level)
+  level?: Level;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  program?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  idPic?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  ncae?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  certificate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  pantawid?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  gradeSlip?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  birthCert?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  homeSketch?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  waterBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  electricBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  wifiBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  enrollmentBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  old?: string;
+}
+
+export class UpdateScholarFromAdminDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  fname?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  mname?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  lname?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(UserStatus)
+  status?: UserStatus;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(Level)
+  level?: Level;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  program?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  idPic?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  ncae?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  certificate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  pantawid?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  gradeSlip?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  birthCert?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  homeSketch?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  waterBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  electricBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  wifiBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  enrollmentBill?: string;
 }

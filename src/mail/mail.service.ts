@@ -4,10 +4,14 @@ import * as nodemailer from 'nodemailer';
 import * as handlebars from 'handlebars';
 import * as path from 'path';
 import * as fs from 'fs';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class MailService {
-  private async connectToOauth(): Promise<string> {
+  private token: string | undefined;
+  private OAuth: OAuth2Client;
+
+  constructor() {
     const OAuth2 = google.auth.OAuth2;
     const auth2Client = new OAuth2(
       process.env.CLIENT_ID,
@@ -15,12 +19,18 @@ export class MailService {
       'https://developers.google.com/oauthplayground',
     );
 
-    auth2Client.setCredentials({
+    this.OAuth = auth2Client;
+
+    this.connectToOauth().then((v) => (this.token = v));
+  }
+
+  private async connectToOauth(): Promise<string> {
+    this.OAuth.setCredentials({
       refresh_token: process.env.G_REFRESH,
     });
 
     return new Promise((resolve, reject) => {
-      auth2Client.getAccessToken((err, token) => {
+      this.OAuth.getAccessToken((err, token) => {
         if (err) {
           reject(err);
           return;
@@ -29,6 +39,23 @@ export class MailService {
         }
       });
     });
+  }
+
+  private async checkAccessToken() {
+    let expiry_date: number;
+
+    try {
+      const info = await this.OAuth.getTokenInfo(this.token);
+      expiry_date = info.expiry_date;
+    } catch {}
+
+    if (expiry_date === undefined) return null;
+    if (new Date().getTime() >= expiry_date) {
+      this.token = await this.connectToOauth();
+      if (!this.token) return null;
+      return this.token;
+    }
+    return this.token;
   }
 
   async sendMail(
@@ -43,7 +70,10 @@ export class MailService {
       subject,
       html: undefined,
     };
-    const accessToken = await this.connectToOauth();
+    const accessToken = this.checkAccessToken();
+
+    if (!accessToken) return;
+
     const authObject = {
       service: 'gmail',
       auth: {
@@ -74,7 +104,6 @@ export class MailService {
       console.log(e);
     }
 
-    console.log(params, authObject);
     return await smtpTransport.sendMail(params);
   }
 

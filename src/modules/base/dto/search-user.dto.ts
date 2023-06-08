@@ -21,11 +21,6 @@ export class SearchUserDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  position?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
   @Transform(toNumber)
   @IsInt()
   page?: number;
@@ -40,11 +35,6 @@ export class SearchUserDto {
   @IsOptional()
   @IsString()
   sort?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  serviceId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -6,41 +6,121 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Roles } from '../../../enum';
+import { Level, Roles } from '../../../enum';
 
 export class CreateUserDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  fname: string;
+
   @ApiPropertyOptional()
   @IsOptional()
-  name: string;
+  @IsString()
+  mname?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  lname: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  address: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(Level)
+  level: Level;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  program: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  idPic: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  ncae: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  certificate: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  pantawid: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  gradeSlip: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  birthCert: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  homeSketch: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  waterBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  electricBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  wifiBill?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  enrollmentBill?: string;
 
   @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
   email: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  password: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsEnum(Roles)
-  role: Roles;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  position: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  description: string;
 }
 
-export class RegisterUserDto {
+export class CreateUserFromAdminDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  name: string;
+  fname: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  mname?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  lname: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  address: string;
 
   @ApiProperty()
   @IsEmail()
@@ -48,9 +128,21 @@ export class RegisterUserDto {
   email: string;
 
   @ApiProperty()
+  @IsNotEmpty()
+  @IsEnum(Roles, { each: true })
+  role: Roles[];
+}
+
+export class UpdateRoleDto {
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  password: string;
+  id: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsEnum(Roles, { each: true })
+  role: Roles[];
 }
 
 export class CodeDto {
