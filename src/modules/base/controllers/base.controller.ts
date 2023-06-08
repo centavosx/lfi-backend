@@ -43,7 +43,7 @@ export class BaseController {
   }
 
   @Roles(RoleTypes.ADMIN_READ, RoleTypes.SUPER, RoleTypes.USER)
-  @Get(Parameter.id() + '/information')
+  @Get(Parameter.id())
   public async getUser(
     @User() user: Usertype,
     @Param('id')
@@ -76,7 +76,6 @@ export class BaseController {
     return await this.baseService.createUser(data);
   }
 
-  @Get()
   @Post('/register')
   public async registerUser(@Body() data: CreateUserDto) {
     return await this.baseService.createUser(data, true);
