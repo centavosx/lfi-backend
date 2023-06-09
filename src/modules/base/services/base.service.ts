@@ -151,7 +151,7 @@ export class BaseService {
       await this.tokenService.whitelistToken(tokens.refreshToken, user.id);
       return tokens;
     }
-    throw new UnauthorizedException('Invalid code');
+    throw new BadRequestException('Invalid code');
   }
 
   public async refreshCode(user: User) {
