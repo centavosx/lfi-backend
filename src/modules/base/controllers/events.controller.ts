@@ -81,13 +81,25 @@ export class BaseController {
     return await this.baseService.createUser(data, true);
   }
 
-  @Roles('all')
+  @Roles(
+    RoleTypes.USER,
+    RoleTypes.ADMIN,
+    RoleTypes.ADMIN_READ,
+    RoleTypes.ADMIN_WRITE,
+    RoleTypes.SUPER,
+  )
   @Post('/verify')
   public async verifyUser(@User() user: Usertype, @Body() { code }: CodeDto) {
     return await this.baseService.verifyUser(code, user);
   }
 
-  @Roles('all')
+  @Roles(
+    RoleTypes.USER,
+    RoleTypes.ADMIN,
+    RoleTypes.ADMIN_READ,
+    RoleTypes.ADMIN_WRITE,
+    RoleTypes.SUPER,
+  )
   @Get('/refresh-code')
   public async refreshCode(@User() user: Usertype) {
     return await this.baseService.refreshCode(user);
@@ -141,7 +153,13 @@ export class BaseController {
     return await this.baseService.resetToken(user, token, dto);
   }
 
-  @Roles('all')
+  @Roles(
+    RoleTypes.ADMIN_WRITE,
+    RoleTypes.SUPER,
+    RoleTypes.USER,
+    RoleTypes.ADMIN,
+    RoleTypes.ADMIN_READ,
+  )
   @Patch('/me')
   public async updateUsersData(
     @Body() data: UserInfoDto,
