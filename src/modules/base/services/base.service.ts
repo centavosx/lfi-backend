@@ -383,6 +383,7 @@ export class BaseService {
 
   public async forgotPass(email: string, origin: string) {
     const user = await this.userRepository.findOne({ where: { email } });
+    if (user?.status !== UserStatus.ACTIVE) return;
     const token = await this.tokenService.generateResetToken(user);
     await this.tokenService.whitelistToken(token, user.id);
     await this.mailService.sendMail(
