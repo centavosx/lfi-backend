@@ -25,3 +25,22 @@ export class CreateEventDto {
   @Type(() => Date)
   endDate: Date;
 }
+
+export class SortEventDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsDate()
+  @Type(() => Date)
+  startDate: Date;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsDate()
+  @Type(() => Date)
+  endDate: Date;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  timeZone: string;
+}

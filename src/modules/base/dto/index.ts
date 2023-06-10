@@ -8,4 +8,4 @@ export * from './id.dto';
 export * from './reset.dto';
 export * from './search.dto';
 export * from './post-announcement.dto';
-export * from './create-event.dto';
+export * from './event.dto';

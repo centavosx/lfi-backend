@@ -32,7 +32,7 @@ import {
     MailService,
     TokenService,
     EventsService,
-    AnnouncementController,
+    AnnouncementsService,
   ],
   exports: [
     TypeOrmModule.forFeature([User, Role, Token, Events, Announcements]),
