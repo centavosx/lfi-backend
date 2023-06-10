@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Level, Roles } from '../../../enum';
+import { Level, Roles, UserStatus } from '../../../enum';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -126,6 +126,12 @@ export class CreateUserFromAdminDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(UserStatus)
+  status: UserStatus;
 
   @ApiProperty()
   @IsNotEmpty()

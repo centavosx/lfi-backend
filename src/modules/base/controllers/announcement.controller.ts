@@ -22,6 +22,7 @@ import {
   SearchUserDto,
   PostAnnouncementDto,
   UpdateRoleDto,
+  SearchDto,
 } from '../dto';
 import { BaseService } from '../services/base.service';
 import { Roles as RoleTypes } from '../../../enum';
@@ -40,7 +41,7 @@ export class AnnouncementController {
 
   @Roles('all')
   @Get()
-  public async getAll(@Query() queryParameters: SearchUserDto) {
+  public async getAll(@Query() queryParameters: SearchDto) {
     return await this.announcementService.getAll(queryParameters);
   }
 

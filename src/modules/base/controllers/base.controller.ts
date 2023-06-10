@@ -68,6 +68,7 @@ export class BaseController {
     @Body() data: CreateUserFromAdminDto,
     @User() user: Usertype,
   ) {
+    console.log('hey');
     if (
       !user.roles.some((v) => v.name === RoleTypes.SUPER) &&
       data.role.some((v) => v !== RoleTypes.USER)

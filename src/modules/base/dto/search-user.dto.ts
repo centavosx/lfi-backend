@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsString, IsEnum, IsOptional, IsInt } from 'class-validator';
-import { Roles } from '../../../enum';
+import { Roles, UserStatus } from '../../../enum';
 
 const isInteger = (value: any): boolean => /^\+?(0|[1-9]\d*)$/.test(value);
 const toNumber = (value: any): number => {
@@ -16,8 +16,13 @@ export class SearchUserDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsEnum(Roles)
-  role?: Roles;
+  @IsEnum(Roles, { each: true })
+  role?: Roles[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(UserStatus)
+  status?: UserStatus;
 
   @ApiPropertyOptional()
   @IsOptional()

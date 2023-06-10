@@ -33,7 +33,7 @@ export class TokenService {
       );
       return decoded as User;
     } catch {
-      throw new UnauthorizedException('Unauthorized');
+      throw new UnauthorizedException('Expired');
     }
   }
 

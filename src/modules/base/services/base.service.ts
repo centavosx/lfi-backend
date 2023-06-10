@@ -45,9 +45,10 @@ export class BaseService {
       id: query.id,
       roles: !!query.role
         ? {
-            name: query.role,
+            name: In(query.role),
           }
         : undefined,
+      status: query.status,
     };
 
     const data = await this.userRepository.find({
@@ -56,6 +57,7 @@ export class BaseService {
           fname: !!query.search
             ? Raw((v) => `LOWER(${v}) LIKE LOWER('${query.search}%')`)
             : undefined,
+
           ...findData,
         },
         {
@@ -203,13 +205,23 @@ export class BaseService {
       Object.assign(newUser, {
         ...data,
         password: pw,
-        roles,
         code: isVerification
           ? Math.random().toString(36).slice(2).toLowerCase()
           : undefined,
       });
 
       user = await this.userRepository.save(newUser);
+
+      const checkAndAddUser = await this.userRepository.findOne({
+        where: {
+          id: user.id,
+        },
+        relations: ['roles'],
+      });
+
+      checkAndAddUser.roles = roles;
+
+      await this.userRepository.save(checkAndAddUser);
 
       try {
         if (isVerification) {
@@ -316,7 +328,7 @@ export class BaseService {
       relations: ['roles'],
     });
 
-    if (!user || user.status === UserStatus.EXPELLED)
+    if (!!user && user.status === UserStatus.EXPELLED)
       throw new NotFoundException('This user is expelled');
 
     if (
@@ -364,7 +376,9 @@ export class BaseService {
 
     if (!!query.role)
       for (const v in users) {
-        users[v].roles = users[v].roles.filter((d) => d.name !== query.role);
+        users[v].roles = users[v].roles.filter((d) =>
+          query.role.includes(d.name),
+        );
         if (users[v].roles.length > 0) {
           userToUpdate.push(users[v]);
         } else {

@@ -33,10 +33,8 @@ import { UserInfoDto } from '../dto/update-user-info.dto';
 @Injectable()
 export class AnnouncementsService {
   constructor(
-    private readonly dataSource: DataSource,
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Announcements)
     private readonly announcementRepository: Repository<Announcements>,
-    private readonly mailService: MailService,
   ) {}
 
   public async getAll(query: SearchDto): Promise<ResponseDto> {
