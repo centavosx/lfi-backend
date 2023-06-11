@@ -62,6 +62,12 @@ $ npm run start:prod
 - For request body, please change role value to "user" and click execute.
 - Also do the following to "admin", "admin-read", "admin-write", and "super".
 
+
+## To create a super user
+- Open http://localhost:3002/document
+- Go to POST /user/super, and click try it out
+- Fill out the necessary field and click execute.
+
 ## Test
 
 ```bash
