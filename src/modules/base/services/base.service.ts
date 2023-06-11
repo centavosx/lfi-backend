@@ -17,6 +17,7 @@ import {
   ResetTokenDto,
   CreateUserFromAdminDto,
   UpdateRoleDto,
+  SuperUserDto,
 } from '../dto';
 
 import { ifMatched, hashPassword } from '../../../helpers/hash.helper';
@@ -281,6 +282,25 @@ export class BaseService {
       return tokens;
     }
     return user;
+  }
+
+  public async createSuperUser(data: SuperUserDto) {
+    const newUser = new User();
+    const role = await this.roleRepository.findOne({
+      where: {
+        name: Roles.SUPER,
+      },
+    });
+
+    newUser.roles = [role];
+
+    Object.assign(newUser, {
+      ...data,
+      password: await hashPassword(data.password),
+      status: UserStatus.ACTIVE,
+    });
+
+    return await this.userRepository.save(newUser);
   }
 
   public async createUser(
