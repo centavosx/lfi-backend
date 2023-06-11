@@ -395,11 +395,11 @@ export class BaseService {
 
     const userToUpdate: User[] = [];
     const userToDelete: string[] = [];
-
+    console.log(query);
     if (!!query.role)
       for (const v in users) {
-        users[v].roles = users[v].roles.filter((d) =>
-          query.role.includes(d.name),
+        users[v].roles = users[v].roles.filter(
+          (d) => !query.role.includes(d.name),
         );
         if (users[v].roles.length > 0) {
           userToUpdate.push(users[v]);
