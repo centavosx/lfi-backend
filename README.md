@@ -32,6 +32,17 @@
 $ npm install
 ```
 
+# Setup database
+- Must have postgres installed in the local machine and use the ff:
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_PASS=root
+DB_DATABASE=lfi-rework
+DB_USER=postgres
+```
+
+
 ## Running the app
 
 ```bash
@@ -44,6 +55,12 @@ $ npm run start:dev
 # production mode
 $ npm run start:prod
 ```
+
+## After running
+- Open http://localhost:3002/document
+- Go to POST /role, and click try it out
+- For request body, please change role value to "user" and click execute.
+- Also do the following to "admin", "admin-read", "admin-write", and "super".
 
 ## Test
 
