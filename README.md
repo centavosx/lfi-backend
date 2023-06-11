@@ -42,6 +42,15 @@ DB_DATABASE=lfi-rework
 DB_USER=postgres
 ```
 
+# GENERATE TABLES
+```
+#Generate migrations from the entities
+$ npm run migration:generate
+
+#Generate tables from migrations
+$ npm run migration:run
+```
+
 
 ## Running the app
 
