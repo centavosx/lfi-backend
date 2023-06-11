@@ -123,12 +123,18 @@ export class BaseController {
     return await this.baseService.updateRole(data);
   }
 
-  @Roles(RoleTypes.SUPER)
+  @Roles(RoleTypes.SUPER, RoleTypes.ADMIN_WRITE)
   @Patch('/role/delete')
   public async removeRole(
     @Query() query: SearchUserDto,
     @Body() data: DeleteDto,
+    @User() user: Usertype,
   ) {
+    if (
+      !user.roles.some((v) => v.name === RoleTypes.SUPER) &&
+      query.role?.some((v) => v !== RoleTypes.USER)
+    )
+      throw new ForbiddenException('Not allowed');
     return await this.baseService.removeRole(data, query);
   }
 

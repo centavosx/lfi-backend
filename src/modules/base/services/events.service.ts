@@ -53,12 +53,7 @@ export class EventsService {
               WHEN TO_CHAR(dates,'YYYY-MM-DD') = TO_CHAR(start_date,'YYYY-MM-DD')
               THEN dates
               ELSE date_trunc('day', dates)
-            END >= $1 AND 
-            CASE 
-              WHEN TO_CHAR(dates,'YYYY-MM-DD') = TO_CHAR(start_date,'YYYY-MM-DD')
-              THEN dates
-              ELSE date_trunc('day', dates)
-            END <= $2
+            END BETWEEN $1 AND $2
           ) "event_gen"
 `,
       [start, end, timeZone],
@@ -94,12 +89,7 @@ export class EventsService {
               WHEN TO_CHAR(dates,'YYYY-MM-DD') = TO_CHAR(start_date,'YYYY-MM-DD')
               THEN dates
               ELSE date_trunc('day', dates)
-            END >= $1 AND 
-            CASE 
-              WHEN TO_CHAR(dates,'YYYY-MM-DD') = TO_CHAR(start_date,'YYYY-MM-DD')
-              THEN dates
-              ELSE date_trunc('day', dates)
-            END <= $2
+            END BETWEEN $1 AND $2
           ) "event_gen"
       ) "ev_grouped"
       WHERE rank = 1
