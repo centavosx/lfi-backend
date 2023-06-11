@@ -218,6 +218,38 @@ export class CreateUserFromAdminDto {
   userData?: UserInformationDto;
 }
 
+export class SuperUserDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  fname: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  mname?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  lname: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  address: string;
+
+  @ApiProperty()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
 export class UpdateRoleDto {
   @ApiProperty()
   @IsString()

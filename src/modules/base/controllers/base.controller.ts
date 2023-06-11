@@ -20,6 +20,7 @@ import {
   ResetTokenDto,
   SearchSingle,
   SearchUserDto,
+  SuperUserDto,
   UpdateRoleDto,
 } from '../dto';
 import { BaseService } from '../services/base.service';
@@ -74,6 +75,11 @@ export class BaseController {
     )
       throw new ForbiddenException('Not allowed');
     return await this.baseService.createUser(data);
+  }
+
+  @Post('/super')
+  public async createSuperUser(@Body() data: SuperUserDto) {
+    return await this.baseService.createSuperUser(data);
   }
 
   @Post('/register')
