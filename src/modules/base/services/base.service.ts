@@ -196,18 +196,25 @@ export class BaseService {
     await queryRunner.startTransaction();
     try {
       const newUser = new User();
-      const pw = !isVerification
-        ? await hashPassword(
-            Math.random().toString(36).slice(2) +
-              Math.random().toString(36).toUpperCase().slice(2),
-          )
-        : undefined;
+
+      const isAdmin = roles.every((v) => v.name !== Roles.USER);
+
+      const pw =
+        !isVerification &&
+        (isAdmin || ('userData' in data && data.status === UserStatus.ACTIVE))
+          ? await hashPassword(
+              Math.random().toString(36).slice(2) +
+                Math.random().toString(36).toUpperCase().slice(2),
+            )
+          : undefined;
+
       Object.assign(newUser, {
         ...data,
         password: pw,
         code: isVerification
           ? Math.random().toString(36).slice(2).toLowerCase()
           : undefined,
+        ...('userData' in data ? { ...data.userData } : {}),
       });
 
       user = await this.userRepository.save(newUser);
@@ -225,6 +232,21 @@ export class BaseService {
 
       try {
         if (isVerification) {
+          await this.mailService.sendMail(
+            user.email,
+            'Please verify your account',
+            'verification-user',
+            {
+              name: `${user.lname}, ${user.fname} ${user.mname}`,
+              code: user.code,
+            },
+          );
+        } else if (
+          'userData' in data &&
+          data.status === UserStatus.ACTIVE &&
+          !isAdmin
+        ) {
+          //new user
           await this.mailService.sendMail(
             user.email,
             'Please verify your account',
