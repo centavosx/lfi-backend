@@ -29,7 +29,7 @@ export class AuthMiddleware implements NestMiddleware {
         relations: ['roles'],
       });
 
-      if (!user) throw new UnauthorizedException('Unauthorized');
+      if (!user) throw new UnauthorizedException('Unauthorized user');
       req.user = user;
     }
     return next();
@@ -58,14 +58,14 @@ export class RefreshMiddleware implements NestMiddleware {
         token,
         userFromToken.id,
       );
-      if (!isListed) throw new UnauthorizedException('Unauthorized');
+      if (!isListed) throw new UnauthorizedException('Expired');
 
       const user = await this.userRepository.findOne({
         where: { id: userFromToken.id },
         relations: ['roles'],
       });
 
-      if (!user) throw new UnauthorizedException('Unauthorized');
+      if (!user) throw new UnauthorizedException('Unauthorized user');
 
       req.user = user;
       req.token = token;

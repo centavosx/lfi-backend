@@ -13,7 +13,10 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.get<Roles[]>('roles', context.getHandler());
+    const roles = this.reflector.get<Roles[] | 'all'[]>(
+      'roles',
+      context.getHandler(),
+    );
 
     if (!roles) {
       return true;
@@ -25,6 +28,7 @@ export class RolesGuard implements CanActivate {
     if (!user) throw new UnauthorizedException('Unauthorized');
 
     for (const x of roles) {
+      if (x === 'all') return true;
       if (!!user.roles)
         for (const u of user?.roles) {
           if (u.name === x) return true;

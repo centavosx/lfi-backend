@@ -12,16 +12,18 @@ export class MailService {
   private OAuth: OAuth2Client;
 
   constructor() {
-    const OAuth2 = google.auth.OAuth2;
-    const auth2Client = new OAuth2(
-      process.env.CLIENT_ID,
-      process.env.CLIENT_SECRET,
-      'https://developers.google.com/oauthplayground',
-    );
+    try {
+      const OAuth2 = google.auth.OAuth2;
+      const auth2Client = new OAuth2(
+        process.env.CLIENT_ID,
+        process.env.CLIENT_SECRET,
+        'https://developers.google.com/oauthplayground',
+      );
 
-    this.OAuth = auth2Client;
+      this.OAuth = auth2Client;
 
-    this.connectToOauth().then((v) => (this.token = v));
+      this.connectToOauth().then((v) => (this.token = v));
+    } catch {}
   }
 
   private async connectToOauth(): Promise<string> {
@@ -30,14 +32,18 @@ export class MailService {
     });
 
     return new Promise((resolve, reject) => {
-      this.OAuth.getAccessToken((err, token) => {
-        if (err) {
-          reject(err);
-          return;
-        } else {
-          resolve(token);
-        }
-      });
+      try {
+        this.OAuth.getAccessToken((err, token) => {
+          if (err) {
+            reject(err);
+            return;
+          } else {
+            resolve(token);
+          }
+        });
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 
@@ -64,47 +70,52 @@ export class MailService {
     template: string,
     context: any,
   ) {
-    const params = {
-      from: process.env.EMAIL,
-      to: email,
-      subject,
-      html: undefined,
-    };
-    const accessToken = this.checkAccessToken();
-
-    if (!accessToken) return;
-
-    const authObject = {
-      service: 'gmail',
-      auth: {
-        type: 'OAuth2',
-        user: process.env.EMAIL,
-        clientId: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRET,
-        refreshToken: process.env.G_REFRESH,
-        accessToken: accessToken,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    };
-
-    const smtpTransport = nodemailer.createTransport(authObject as any);
-
-    const templatePath = './src/templates/';
-
     try {
-      const htmlfile = path.resolve(templatePath, `${template}.hbs`);
-      const htmlHbs = await this.readFile(htmlfile);
-      if (htmlHbs) {
-        const htmlTemplate = handlebars.compile(htmlHbs);
-        params.html = htmlTemplate(context || {});
+      const params = {
+        from: process.env.EMAIL,
+        to: email,
+        subject,
+        html: undefined,
+      };
+      const accessToken = this.checkAccessToken();
+
+      if (!accessToken) return;
+
+      const authObject = {
+        service: 'gmail',
+        auth: {
+          type: 'OAuth2',
+          user: process.env.EMAIL,
+          clientId: process.env.CLIENT_ID,
+          clientSecret: process.env.CLIENT_SECRET,
+          refreshToken: process.env.G_REFRESH,
+          accessToken: accessToken,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      };
+
+      const smtpTransport = nodemailer.createTransport(authObject as any);
+
+      const templatePath = './src/templates/';
+
+      try {
+        const htmlfile = path.resolve(templatePath, `${template}.hbs`);
+        const htmlHbs = await this.readFile(htmlfile);
+        if (htmlHbs) {
+          const htmlTemplate = handlebars.compile(htmlHbs);
+          params.html = htmlTemplate(context || {});
+        }
+      } catch (e) {
+        console.log(e);
       }
+
+      return await smtpTransport.sendMail(params);
     } catch (e) {
       console.log(e);
+      return;
     }
-
-    return await smtpTransport.sendMail(params);
   }
 
   private async readFile(file: string) {

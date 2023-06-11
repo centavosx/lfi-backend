@@ -45,9 +45,10 @@ export class BaseService {
       id: query.id,
       roles: !!query.role
         ? {
-            name: query.role,
+            name: In(query.role),
           }
         : undefined,
+      status: query.status,
     };
 
     const data = await this.userRepository.find({
@@ -56,6 +57,7 @@ export class BaseService {
           fname: !!query.search
             ? Raw((v) => `LOWER(${v}) LIKE LOWER('${query.search}%')`)
             : undefined,
+
           ...findData,
         },
         {
@@ -144,14 +146,14 @@ export class BaseService {
 
   public async verifyUser(code: string, user: User) {
     if (user.code === code) {
-      user.status = UserStatus.ACTIVE;
+      user.status = UserStatus.VERIFIED;
       user.code = null;
       const newU = await this.userRepository.save(user);
       const tokens = await this.tokenService.generateTokens(newU);
       await this.tokenService.whitelistToken(tokens.refreshToken, user.id);
       return tokens;
     }
-    throw new UnauthorizedException('Invalid code');
+    throw new BadRequestException('Invalid code');
   }
 
   public async refreshCode(user: User) {
@@ -194,44 +196,78 @@ export class BaseService {
     await queryRunner.startTransaction();
     try {
       const newUser = new User();
-      const pw = !isVerification
-        ? await hashPassword(
-            Math.random().toString(36).slice(2) +
-              Math.random().toString(36).toUpperCase().slice(2),
-          )
-        : undefined;
+
+      const isAdmin = roles.every((v) => v.name !== Roles.USER);
+
+      const pw =
+        !isVerification &&
+        (isAdmin || ('userData' in data && data.status === UserStatus.ACTIVE))
+          ? await hashPassword(
+              Math.random().toString(36).slice(2) +
+                Math.random().toString(36).toUpperCase().slice(2),
+            )
+          : undefined;
+
       Object.assign(newUser, {
         ...data,
         password: pw,
-        roles,
         code: isVerification
           ? Math.random().toString(36).slice(2).toLowerCase()
           : undefined,
+        ...('userData' in data ? { ...data.userData } : {}),
       });
 
       user = await this.userRepository.save(newUser);
 
-      if (isVerification) {
-        await this.mailService.sendMail(
-          user.email,
-          'Please verify your account',
-          'verification-user',
-          {
-            name: `${user.lname}, ${user.fname} ${user.mname}`,
-            code: user.code,
-          },
-        );
-      } else {
-        await this.mailService.sendMail(
-          user.email,
-          'Your admin account',
-          'new-admin-user',
-          {
-            name: `${user.lname}, ${user.fname} ${user.mname}`,
-            password: pw,
-          },
-        );
-      }
+      const checkAndAddUser = await this.userRepository.findOne({
+        where: {
+          id: user.id,
+        },
+        relations: ['roles'],
+      });
+
+      checkAndAddUser.roles = roles;
+
+      await this.userRepository.save(checkAndAddUser);
+
+      try {
+        if (isVerification) {
+          await this.mailService.sendMail(
+            user.email,
+            'Please verify your account',
+            'verification-user',
+            {
+              name: `${user.lname}, ${user.fname} ${user.mname}`,
+              code: user.code,
+            },
+          );
+        } else if (
+          'userData' in data &&
+          data.status === UserStatus.ACTIVE &&
+          !isAdmin
+        ) {
+          //new user
+          await this.mailService.sendMail(
+            user.email,
+            'Please verify your account',
+            'verification-user',
+            {
+              name: `${user.lname}, ${user.fname} ${user.mname}`,
+              code: user.code,
+            },
+          );
+        } else {
+          await this.mailService.sendMail(
+            user.email,
+            'Your admin account',
+            'new-admin-user',
+            {
+              name: `${user.lname}, ${user.fname} ${user.mname}`,
+              password: pw,
+            },
+          );
+        }
+      } catch {}
 
       await queryRunner.commitTransaction();
     } catch (err) {
@@ -262,14 +298,19 @@ export class BaseService {
     if (!!isUserExist) {
       if (isUserExist.status === UserStatus.EXPELLED)
         throw new ForbiddenException('This user is expelled');
-      if (isUserExist.status === UserStatus.ACTIVE)
+      if (
+        isUserExist.status === UserStatus.ACTIVE ||
+        isUserExist.status === UserStatus.VERIFIED
+      )
         throw new ConflictException('This user already exist');
       dataToSave = isUserExist;
     }
 
     const role = await this.roleRepository.find({
       where: {
-        name: In((dataToSave as CreateUserFromAdminDto).role) ?? Roles.USER,
+        name: !!(dataToSave as CreateUserFromAdminDto).role
+          ? In((dataToSave as CreateUserFromAdminDto).role)
+          : Roles.USER,
       },
     });
 
@@ -309,7 +350,14 @@ export class BaseService {
       relations: ['roles'],
     });
 
-    if (!user || user.status === UserStatus.ACTIVE)
+    if (!!user && user.status === UserStatus.EXPELLED)
+      throw new NotFoundException('This user is expelled');
+
+    if (
+      !user ||
+      user.status === UserStatus.PENDING ||
+      user.status === UserStatus.CANCELED
+    )
       throw new NotFoundException('User not found');
 
     if (!(await ifMatched(data.password, user.password)))
@@ -350,7 +398,9 @@ export class BaseService {
 
     if (!!query.role)
       for (const v in users) {
-        users[v].roles = users[v].roles.filter((d) => d.name !== query.role);
+        users[v].roles = users[v].roles.filter((d) =>
+          query.role.includes(d.name),
+        );
         if (users[v].roles.length > 0) {
           userToUpdate.push(users[v]);
         } else {
@@ -369,6 +419,7 @@ export class BaseService {
 
   public async forgotPass(email: string, origin: string) {
     const user = await this.userRepository.findOne({ where: { email } });
+    if (user?.status !== UserStatus.ACTIVE) return;
     const token = await this.tokenService.generateResetToken(user);
     await this.tokenService.whitelistToken(token, user.id);
     await this.mailService.sendMail(
@@ -398,7 +449,12 @@ export class BaseService {
     return;
   }
 
-  public async updateUsers({ id, password, old, ...rest }: UserInfoDto) {
+  public async updateUsers({
+    id,
+    password,
+    old,
+    ...rest
+  }: UserInfoDto & { id: string }) {
     const userData = await this.userRepository.findOne({
       where: {
         id,
