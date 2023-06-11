@@ -34,7 +34,7 @@ $ npm install
 
 # Setup database
 - Must have postgres installed in the local machine and use the ff:
-```
+```bash
 DB_HOST=localhost
 DB_PORT=5432
 DB_PASS=root
@@ -43,7 +43,7 @@ DB_USER=postgres
 ```
 
 # GENERATE TABLES
-```
+```bash
 # Generate migrations from the entities
 $ npm run migration:generate
 
