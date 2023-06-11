@@ -44,10 +44,10 @@ DB_USER=postgres
 
 # GENERATE TABLES
 ```
-#Generate migrations from the entities
+# Generate migrations from the entities
 $ npm run migration:generate
 
-#Generate tables from migrations
+# Generate tables from migrations
 $ npm run migration:run
 ```
 
