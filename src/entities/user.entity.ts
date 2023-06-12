@@ -65,6 +65,9 @@ export class User {
   @Column({ nullable: true, name: 'birth_cert' })
   birthCert?: string | null;
 
+  @Column({ nullable: true })
+  autobiography?: string | null;
+
   @Column({ nullable: true, name: 'home_sketch' })
   homeSketch?: string | null;
 
@@ -93,6 +96,9 @@ export class User {
     inverseJoinColumn: { name: 'role_id' },
   })
   roles: Role[];
+
+  @Column({ nullable: true })
+  accepted?: Date | null;
 
   @CreateDateColumn()
   created: Date;

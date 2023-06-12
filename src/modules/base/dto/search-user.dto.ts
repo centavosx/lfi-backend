@@ -21,8 +21,8 @@ export class SearchUserDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus;
+  @IsEnum(UserStatus, { each: true })
+  status?: UserStatus[];
 
   @ApiPropertyOptional()
   @IsOptional()

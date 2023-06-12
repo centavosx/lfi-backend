@@ -49,7 +49,7 @@ export class BaseService {
             name: In(query.role),
           }
         : undefined,
-      status: query.status,
+      status: !!query.status ? In(query.status) : undefined,
     };
 
     const data = await this.userRepository.find({
@@ -165,9 +165,8 @@ export class BaseService {
     await this.mailService.sendMail(
       newUser.email,
       'Please verify your account',
-      'verification-user',
+      'verification',
       {
-        name: `${user.lname}, ${user.fname} ${user.mname}`,
         code: newUser.code,
       },
     );
@@ -203,19 +202,22 @@ export class BaseService {
       const pw =
         !isVerification &&
         (isAdmin || ('userData' in data && data.status === UserStatus.ACTIVE))
-          ? await hashPassword(
-              Math.random().toString(36).slice(2) +
-                Math.random().toString(36).toUpperCase().slice(2),
-            )
+          ? Math.random().toString(36).slice(2) +
+            Math.random().toString(36).toUpperCase().slice(2)
           : undefined;
 
       Object.assign(newUser, {
         ...data,
-        password: pw,
+        password: !!pw ? await hashPassword(pw) : undefined,
         code: isVerification
           ? Math.random().toString(36).slice(2).toLowerCase()
           : undefined,
-        ...('userData' in data ? { ...data.userData } : {}),
+        ...('userData' in data
+          ? {
+              ...data.userData,
+              accepted: data.status === UserStatus.ACTIVE ? new Date() : null,
+            }
+          : {}),
       });
 
       user = await this.userRepository.save(newUser);
@@ -236,9 +238,8 @@ export class BaseService {
           await this.mailService.sendMail(
             user.email,
             'Please verify your account',
-            'verification-user',
+            'verification',
             {
-              name: `${user.lname}, ${user.fname} ${user.mname}`,
               code: user.code,
             },
           );
@@ -250,20 +251,20 @@ export class BaseService {
           //new user
           await this.mailService.sendMail(
             user.email,
-            'Please verify your account',
-            'verification-user',
+            'You have been accepted',
+            'acceptance-scholar',
             {
-              name: `${user.lname}, ${user.fname} ${user.mname}`,
-              code: user.code,
+              email: checkAndAddUser.email,
+              password: pw,
             },
           );
         } else {
           await this.mailService.sendMail(
             user.email,
             'Your admin account',
-            'new-admin-user',
+            'acceptance-admin',
             {
-              name: `${user.lname}, ${user.fname} ${user.mname}`,
+              email: user.email,
               password: pw,
             },
           );
@@ -444,10 +445,9 @@ export class BaseService {
     await this.tokenService.whitelistToken(token, user.id);
     await this.mailService.sendMail(
       user.email,
-      'Reset Password',
-      'reset-user',
+      'Forgot password',
+      'forgot-password',
       {
-        name: `${user.lname}, ${user.fname} ${user.mname}`,
         link: origin + '/reset?token=' + token,
       },
     );
@@ -469,12 +469,10 @@ export class BaseService {
     return;
   }
 
-  public async updateUsers({
-    id,
-    password,
-    old,
-    ...rest
-  }: UserInfoDto & { id: string }) {
+  public async updateUsers(
+    { id, password, old, ...rest }: UserInfoDto & { id: string },
+    user: User,
+  ) {
     const userData = await this.userRepository.findOne({
       where: {
         id,
@@ -483,8 +481,30 @@ export class BaseService {
 
     if (!userData) throw new NotFoundException();
 
+    const isUser = userData.roles.some((v) => v.name === Roles.USER);
+    if (!isUser && !user.roles.some((v) => v.name === Roles.SUPER))
+      throw new ForbiddenException('Not allowed');
+
+    const isAccepted =
+      rest.status === UserStatus.ACTIVE &&
+      userData.status !== UserStatus.ACTIVE &&
+      isUser;
+
+    const isExpelled =
+      rest.status === UserStatus.EXPELLED &&
+      userData.status !== UserStatus.EXPELLED &&
+      isUser;
+
+    const pw = isAccepted
+      ? Math.random().toString(36).slice(2) +
+        Math.random().toString(36).toUpperCase().slice(2)
+      : undefined;
+
     Object.assign(userData, {
       ...rest,
+      ...(isAccepted ? { accepted: new Date() } : {}),
+      ...(isExpelled ? { deleted: new Date() } : {}),
+      ...(!!pw ? { password: await hashPassword(pw) } : {}),
     });
 
     if (!!old && !(await ifMatched(old, userData.password)))
@@ -493,6 +513,25 @@ export class BaseService {
     if (!!password) userData.password = await hashPassword(password);
 
     await this.userRepository.save(userData);
+
+    if (isAccepted)
+      await this.mailService.sendMail(
+        userData.email,
+        'You have been accepted',
+        'acceptance-scholar',
+        {
+          email: userData.email,
+          password: pw,
+        },
+      );
+
+    if (isExpelled)
+      await this.mailService.sendMail(
+        userData.email,
+        'You have been expelled',
+        'expelled',
+        {},
+      );
 
     return;
   }

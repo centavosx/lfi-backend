@@ -26,7 +26,6 @@ import {
 import { BaseService } from '../services/base.service';
 import { Roles as RoleTypes } from '../../../enum';
 import { Parameter } from '../../../helpers';
-import { MailService } from '../../../mail/mail.service';
 import { Token, User } from '../../../decorators';
 import { User as Usertype } from '../../../entities';
 import { ForbiddenException } from '@nestjs/common/exceptions';
@@ -43,7 +42,7 @@ export class BaseController {
     return await this.baseService.getAll(queryParameters);
   }
 
-  @Roles(RoleTypes.ADMIN_READ, RoleTypes.SUPER, RoleTypes.USER)
+  @Roles('all')
   @Get(Parameter.id())
   public async getUser(
     @User() user: Usertype,
@@ -60,6 +59,7 @@ export class BaseController {
       id !== 'me'
     )
       throw new ForbiddenException('Not allowed');
+
     return await this.baseService.getUser(userId);
   }
 
@@ -116,7 +116,7 @@ export class BaseController {
   public async regularLogin(@Body() data: LoginDto) {
     return await this.baseService.loginUser(data);
   }
-
+  r;
   @Roles(RoleTypes.ADMIN_READ, RoleTypes.SUPER)
   @Get('search')
   public async searchUser(@Query() search: SearchSingle) {
@@ -154,11 +154,24 @@ export class BaseController {
   }
 
   @Roles('all')
-  @Patch('/me')
-  public async updateUsersData(
+  @Patch(Parameter.id())
+  public async updateUsersInfo(
     @Body() data: UserInfoDto,
     @User() user: Usertype,
+    @Param('id')
+    id: string,
   ) {
-    return await this.baseService.updateUsers({ ...data, id: user.id });
+    const userId = id === 'me' ? user.id : id;
+    if (
+      user.roles.every(
+        (v) =>
+          v.name === RoleTypes.USER ||
+          (v.name !== RoleTypes.SUPER && v.name !== RoleTypes.ADMIN_WRITE),
+      ) &&
+      id !== 'me' &&
+      id !== user.id
+    )
+      throw new ForbiddenException('Not allowed');
+    return await this.baseService.updateUsers({ ...data, id: userId }, user);
   }
 }
