@@ -14,7 +14,7 @@ export class DashboardController {
 
   @Roles(RoleTypes.SUPER, RoleTypes.ADMIN_READ)
   @Get()
-  public async getAll(@Query() { timeZone }: DashboardDto) {
-    return await this.dashboardService.getDashboard(timeZone);
+  public async getAll(@Query() { timeZone, status }: DashboardDto) {
+    return await this.dashboardService.getDashboard(timeZone, status);
   }
 }
