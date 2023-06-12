@@ -44,3 +44,10 @@ export class SortEventDto {
   @IsString()
   timeZone: string;
 }
+
+export class DashboardDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  timeZone: string;
+}

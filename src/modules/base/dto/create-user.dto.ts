@@ -47,6 +47,11 @@ class UserInformationDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  autobiography: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   gradeSlip: string;
 
   @ApiProperty()
@@ -141,6 +146,11 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   birthCert: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  autobiography: string;
 
   @ApiProperty()
   @IsString()

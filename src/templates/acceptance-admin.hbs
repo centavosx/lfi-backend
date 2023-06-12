@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <title>Verification Code</title>
+    <title>Admin Acceptance Email Template</title>
     <style>
       .center { display: block; margin-top: 50px; margin-left: auto;
       margin-right: auto; width: 50%; } h1 { font-family: 'Times New Roman',
@@ -18,21 +18,22 @@
       style='max-width: 400px; height: auto'
       class='center'
     />
-    <h1>Hello Scholar!</h1>
+    <h1>Congratulations!</h1>
     <p>
-      To continue accessing your Scholar Portal, you need to verify your
-      account.<br />
-      Your verification code is attached below:<br />
-    </p>
-    <br />
-    <div class='p1'>Verification Code: {{code}}</div>
-    <br />
-    <p>
-      Lao Foundation Inc. requires you to verify your account to gain full
-      access to the Portal and its features.
+      Hello, Good day! You are now an administrator for the Lao Foundation Inc.
+      Scholarship Program.
       <br />
-      If you didn't request this code, please ignore this message.
+      You may now be able to access the web-application through the details
+      attached to this email. Please change your password right away.
     </p>
+    <br />
+    <div class='p1'>
+      Email:
+      {{email}}
+      <br />
+      Password:
+      {{password}}
+    </div>
     <br /><br />
     <div class='p2'>
       Sincerely,

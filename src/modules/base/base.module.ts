@@ -6,12 +6,14 @@ import { Role, User, Token, Events, Announcements } from '../../entities';
 import {
   AnnouncementController,
   BaseController,
+  DashboardController,
   EventsController,
   RoleController,
 } from './controllers';
 import {
   AnnouncementsService,
   BaseService,
+  DashboardService,
   EventsService,
   RoleService,
 } from './services';
@@ -25,6 +27,7 @@ import {
     RoleController,
     AnnouncementController,
     EventsController,
+    DashboardController,
   ],
   providers: [
     BaseService,
@@ -33,6 +36,7 @@ import {
     TokenService,
     EventsService,
     AnnouncementsService,
+    DashboardService,
   ],
   exports: [
     TypeOrmModule.forFeature([User, Role, Token, Events, Announcements]),
