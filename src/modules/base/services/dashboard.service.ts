@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Events, User } from '../../../entities';
-import { Repository, MoreThan } from 'typeorm';
+import {
+  Repository,
+  MoreThan,
+  LessThan,
+  Between,
+  LessThanOrEqual,
+} from 'typeorm';
 import { UserStatus } from 'src/enum';
 
 @Injectable()
@@ -15,9 +21,12 @@ export class DashboardService {
   public async getDashboard(timeZone: string, status: UserStatus) {
     const [upcomingEvents, graphValues, userCounts] = await Promise.all([
       this.eventsRepository.find({
-        where: {
-          startDate: MoreThan(new Date()),
-        },
+        where: [
+          {
+            endDate: MoreThan(new Date()),
+            startDate: LessThanOrEqual(new Date()),
+          },
+        ],
         take: 10,
         order: {
           startDate: 'ASC',
