@@ -7,43 +7,44 @@ import {
   LessThan,
   Between,
   LessThanOrEqual,
+  DataSource,
 } from 'typeorm';
 import { UserStatus } from 'src/enum';
 
 @Injectable()
 export class DashboardService {
   constructor(
+    private readonly dataSource: DataSource,
     @InjectRepository(Events)
     private readonly eventsRepository: Repository<Events>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
+  //Run in non-concurrent since the current database only handles up to three connections
   public async getDashboard(timeZone: string, status: UserStatus) {
-    const [upcomingEvents, graphValues, userCounts] = await Promise.all([
-      this.eventsRepository.find({
-        where: [
-          {
-            endDate: MoreThan(new Date()),
-            startDate: LessThanOrEqual(new Date()),
-          },
-        ],
-        take: 10,
-        order: {
-          startDate: 'ASC',
+    const upcomingEvents = await this.eventsRepository.find({
+      where: [
+        {
+          endDate: MoreThan(new Date()),
+          startDate: LessThanOrEqual(new Date()),
         },
-      }),
-
-      this.userRepository.query(
-        `SELECT TO_CHAR(timezone($1, "user".created),'YYYY') AS "x", count(TO_CHAR(timezone($1, "user".created), 'YYYY')) AS "y" FROM "user"
+      ],
+      take: 5,
+      order: {
+        startDate: 'ASC',
+      },
+    });
+    const graphValues = await this.userRepository.query(
+      `SELECT TO_CHAR(timezone($1, "user".created),'YYYY') AS "x", count(TO_CHAR(timezone($1, "user".created), 'YYYY')) AS "y" FROM "user"
             LEFT JOIN user_role ON user_role.user_id = "user".id 
             LEFT JOIN role "role" ON user_role.role_id = "role".id  
               WHERE "user".status = $2
               AND "role".name = 'user' 
           GROUP BY TO_CHAR(timezone($1, "user".created),'YYYY')`,
-        [timeZone, status],
-      ),
+      [timeZone, status],
+    );
 
-      this.userRepository.query(`
+    const userCounts = await this.userRepository.query(`
       SELECT DISTINCT 
               CASE 
                 WHEN "role".name = 'super' OR "role".name LIKE 'admin%' 
@@ -75,8 +76,7 @@ export class DashboardService {
           LEFT JOIN role "role" ON user_role.role_id = "role".id  
             WHERE "role".name = 'user' AND "user".status = 'verified'
         GROUP BY "user".status
-      `),
-    ]);
+      `);
 
     return {
       upcomingEvents,
