@@ -1,6 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { UserStatus } from 'src/enum';
 
 export class CreateEventDto {
   @ApiProperty()
@@ -50,4 +51,9 @@ export class DashboardDto {
   @IsNotEmpty()
   @IsString()
   timeZone: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsEnum(UserStatus)
+  status: UserStatus;
 }

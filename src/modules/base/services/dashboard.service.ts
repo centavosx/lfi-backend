@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Events, User } from '../../../entities';
-import { Repository, MoreThan } from 'typeorm';
+import {
+  Repository,
+  MoreThan,
+  LessThan,
+  Between,
+  LessThanOrEqual,
+} from 'typeorm';
+import { UserStatus } from 'src/enum';
 
 @Injectable()
 export class DashboardService {
@@ -11,12 +18,15 @@ export class DashboardService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
-  public async getDashboard(timeZone: string) {
+  public async getDashboard(timeZone: string, status: UserStatus) {
     const [upcomingEvents, graphValues, userCounts] = await Promise.all([
       this.eventsRepository.find({
-        where: {
-          startDate: MoreThan(new Date()),
-        },
+        where: [
+          {
+            endDate: MoreThan(new Date()),
+            startDate: LessThanOrEqual(new Date()),
+          },
+        ],
         take: 10,
         order: {
           startDate: 'ASC',
@@ -27,10 +37,10 @@ export class DashboardService {
         `SELECT TO_CHAR(timezone($1, "user".created),'YYYY') AS "x", count(TO_CHAR(timezone($1, "user".created), 'YYYY')) AS "y" FROM "user"
             LEFT JOIN user_role ON user_role.user_id = "user".id 
             LEFT JOIN role "role" ON user_role.role_id = "role".id  
-              WHERE "user".status = 'active' 
+              WHERE "user".status = $2
               AND "role".name = 'user' 
           GROUP BY TO_CHAR(timezone($1, "user".created),'YYYY')`,
-        [timeZone],
+        [timeZone, status],
       ),
 
       this.userRepository.query(`

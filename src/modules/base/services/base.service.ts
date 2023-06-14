@@ -18,6 +18,7 @@ import {
   CreateUserFromAdminDto,
   UpdateRoleDto,
   SuperUserDto,
+  UserInformationDto,
 } from '../dto';
 
 import { ifMatched, hashPassword } from '../../../helpers/hash.helper';
@@ -29,6 +30,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common/exceptions';
 import { UserInfoDto } from '../dto/update-user-info.dto';
+import { RealTimeNotifications } from 'src/firebaseapp';
 
 @Injectable()
 export class BaseService {
@@ -174,20 +176,11 @@ export class BaseService {
     return newUser;
   }
 
-  public async acceptUser(id: string) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id,
-      },
-    });
-
-    if (!user) throw new NotFoundException('Not founc');
-  }
-
   public async addUser(
-    data: CreateUserDto | CreateUserFromAdminDto,
+    data: User,
     roles: Role[],
     isVerification?: boolean,
+    uData?: UserInformationDto,
   ) {
     let user: User;
     const queryRunner = this.dataSource.createQueryRunner();
@@ -201,7 +194,7 @@ export class BaseService {
 
       const pw =
         !isVerification &&
-        (isAdmin || ('userData' in data && data.status === UserStatus.ACTIVE))
+        (isAdmin || (!!uData && data.status === UserStatus.ACTIVE))
           ? Math.random().toString(36).slice(2) +
             Math.random().toString(36).toUpperCase().slice(2)
           : undefined;
@@ -212,9 +205,9 @@ export class BaseService {
         code: isVerification
           ? Math.random().toString(36).slice(2).toLowerCase()
           : undefined,
-        ...('userData' in data
+        ...(!!uData
           ? {
-              ...data.userData,
+              ...uData,
               accepted: data.status === UserStatus.ACTIVE ? new Date() : null,
             }
           : {}),
@@ -243,11 +236,7 @@ export class BaseService {
               code: user.code,
             },
           );
-        } else if (
-          'userData' in data &&
-          data.status === UserStatus.ACTIVE &&
-          !isAdmin
-        ) {
+        } else if (!!uData && data.status === UserStatus.ACTIVE && !isAdmin) {
           //new user
           await this.mailService.sendMail(
             user.email,
@@ -258,6 +247,12 @@ export class BaseService {
               password: pw,
             },
           );
+          const notif = new RealTimeNotifications(user.id);
+          await notif.sendData({
+            title: 'Congratulations!',
+            description:
+              'You have been accepted to our scholarship program, please check your email for more details',
+          });
         } else {
           await this.mailService.sendMail(
             user.email,
@@ -336,12 +331,19 @@ export class BaseService {
     });
 
     if (!role) throw new NotFoundException('Role not found');
+    let uData;
+    if ('userData' in data) {
+      uData = data.userData;
+      delete data.userData;
+    }
     return await this.addUser(
       {
         ...dataToSave,
+        ...data,
       } as any,
       role,
       isVerification,
+      uData,
     );
   }
 
@@ -513,8 +515,9 @@ export class BaseService {
     if (!!password) userData.password = await hashPassword(password);
 
     await this.userRepository.save(userData);
+    const notif = new RealTimeNotifications(userData.id);
 
-    if (isAccepted)
+    if (isAccepted) {
       await this.mailService.sendMail(
         userData.email,
         'You have been accepted',
@@ -525,13 +528,27 @@ export class BaseService {
         },
       );
 
-    if (isExpelled)
+      await notif.sendData({
+        title: 'Congratulations!',
+        description:
+          'You have been accepted to our scholarship program, please check your email for more details',
+      });
+    }
+
+    if (isExpelled) {
       await this.mailService.sendMail(
         userData.email,
         'You have been expelled',
         'expelled',
         {},
       );
+
+      await notif.sendData({
+        title: 'You have been expelled',
+        description:
+          "I'm sorry to say this but we decided to expell you due to the requirement has not been met or violations.",
+      });
+    }
 
     return;
   }

@@ -1,34 +1,18 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Announcements, Role, User } from '../../../entities';
-import { DataSource, Repository, Raw, In } from 'typeorm';
+import { Announcements } from '../../../entities';
+import { Repository, Raw } from 'typeorm';
 
 import {
-  LoginDto,
-  CreateUserDto,
-  SearchUserDto,
   ResponseDto,
-  DeleteDto,
-  ResetTokenDto,
-  CreateUserFromAdminDto,
-  UpdateRoleDto,
   SearchDto,
   PostAnnouncementDto,
+  UpdateAnnouncementDto,
 } from '../dto';
 
-import { ifMatched, hashPassword } from '../../../helpers/hash.helper';
-import { Roles, UserStatus } from '../../../enum';
-import { MailService } from '../../../mail/mail.service';
-import {
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common/exceptions';
-import { UserInfoDto } from '../dto/update-user-info.dto';
+import { NotFoundException } from '@nestjs/common/exceptions';
+
+import { RealTimeNotifications } from '../../../firebaseapp';
 
 @Injectable()
 export class AnnouncementsService {
@@ -36,6 +20,18 @@ export class AnnouncementsService {
     @InjectRepository(Announcements)
     private readonly announcementRepository: Repository<Announcements>,
   ) {}
+
+  public async getOne(id: string) {
+    const value = await this.announcementRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!value) throw new NotFoundException('Not found');
+
+    return value;
+  }
 
   public async getAll(query: SearchDto): Promise<ResponseDto> {
     const data = await this.announcementRepository.find({
@@ -72,9 +68,31 @@ export class AnnouncementsService {
   }
 
   public async postAnnouncement(data: PostAnnouncementDto) {
+    const notif = new RealTimeNotifications('all');
+    await notif.sendData({
+      title: 'Announcement - ' + data.title,
+      description: data.description,
+    });
     return await this.announcementRepository.save({
       ...new Announcements(),
       ...data,
     });
+  }
+
+  public async patchAnnouncemnt(data: UpdateAnnouncementDto) {
+    const announcement = await this.announcementRepository.findOne({
+      where: {
+        id: data.id,
+      },
+    });
+
+    if (!announcement) throw new NotFoundException('Not found');
+
+    Object.assign(announcement, {
+      title: data.title,
+      description: data.description,
+    });
+
+    return await this.announcementRepository.save(announcement);
   }
 }

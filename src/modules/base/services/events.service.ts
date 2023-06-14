@@ -19,6 +19,7 @@ import { CreateEventDto } from '../dto';
 import { MailService } from '../../../mail/mail.service';
 
 import { generateColor } from '../../../helpers';
+import { RealTimeNotifications } from '../../../firebaseapp';
 
 @Injectable()
 export class EventsService {
@@ -99,6 +100,11 @@ export class EventsService {
   }
 
   public async createEvent(data: CreateEventDto) {
+    const notif = new RealTimeNotifications('all');
+    await notif.sendData({
+      title: 'Event - ' + data.name,
+      description: data.description,
+    });
     return await this.eventRepository.save({
       ...new Events(),
       ...data,
