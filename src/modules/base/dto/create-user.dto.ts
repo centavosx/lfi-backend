@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { Level, Roles, UserStatus } from '../../../enum';
 
-class UserInformationDto {
+export class UserInformationDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()

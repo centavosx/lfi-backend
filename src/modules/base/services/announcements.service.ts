@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Announcements } from '../../../entities';
-import { Repository, Raw, In } from 'typeorm';
+import { Repository, Raw } from 'typeorm';
 
 import {
   ResponseDto,
@@ -10,15 +10,9 @@ import {
   UpdateAnnouncementDto,
 } from '../dto';
 
-import { ifMatched, hashPassword } from '../../../helpers/hash.helper';
-import { Roles, UserStatus } from '../../../enum';
-import { MailService } from '../../../mail/mail.service';
-import {
-  ForbiddenException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common/exceptions';
-import { UserInfoDto } from '../dto/update-user-info.dto';
+import { NotFoundException } from '@nestjs/common/exceptions';
+
+import { RealTimeNotifications } from '../../../firebaseapp';
 
 @Injectable()
 export class AnnouncementsService {
@@ -74,6 +68,11 @@ export class AnnouncementsService {
   }
 
   public async postAnnouncement(data: PostAnnouncementDto) {
+    const notif = new RealTimeNotifications('all');
+    await notif.sendData({
+      title: 'Announcement - ' + data.title,
+      description: data.description,
+    });
     return await this.announcementRepository.save({
       ...new Announcements(),
       ...data,
