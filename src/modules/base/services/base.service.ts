@@ -30,7 +30,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common/exceptions';
 import { UserInfoDto } from '../dto/update-user-info.dto';
-import { RealTimeNotifications } from 'src/firebaseapp';
+import { NewUser, RealTimeNotifications } from '../../../firebaseapp';
 
 @Injectable()
 export class BaseService {
@@ -184,6 +184,9 @@ export class BaseService {
   ) {
     let user: User;
     const queryRunner = this.dataSource.createQueryRunner();
+    const picture = uData.picture;
+
+    delete uData.picture;
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -238,6 +241,14 @@ export class BaseService {
           );
         } else if (!!uData && data.status === UserStatus.ACTIVE && !isAdmin) {
           //new user
+          const newUserFb = new NewUser(user.id);
+
+          await newUserFb.setData({
+            id: user.id,
+            name: user.lname + ', ' + user.fname + ' ' + user.mname,
+            picture,
+          });
+
           await this.mailService.sendMail(
             user.email,
             'You have been accepted',
@@ -418,7 +429,7 @@ export class BaseService {
 
     const userToUpdate: User[] = [];
     const userToDelete: string[] = [];
-    console.log(query);
+
     if (!!query.role)
       for (const v in users) {
         users[v].roles = users[v].roles.filter(
@@ -443,6 +454,9 @@ export class BaseService {
   public async forgotPass(email: string, origin: string) {
     const user = await this.userRepository.findOne({ where: { email } });
     if (user?.status !== UserStatus.ACTIVE) return;
+
+    console.log(email);
+
     const token = await this.tokenService.generateResetToken(user);
     await this.tokenService.whitelistToken(token, user.id);
     await this.mailService.sendMail(
@@ -458,6 +472,7 @@ export class BaseService {
 
   public async resetToken(user: User, token: string, dto: ResetTokenDto) {
     if (!user) throw new UnauthorizedException('Unauthorized');
+    if (user.status !== UserStatus.ACTIVE) throw new NotFoundException();
     user.password = await hashPassword(dto.password);
     try {
       await this.tokenService.unlistToken(token, user.id);
@@ -475,6 +490,10 @@ export class BaseService {
     { id, password, old, ...rest }: UserInfoDto & { id: string },
     user: User,
   ) {
+    const picture = rest.picture;
+
+    delete rest.picture;
+
     const userData = await this.userRepository.findOne({
       where: {
         id,
@@ -516,6 +535,14 @@ export class BaseService {
 
     await this.userRepository.save(userData);
     const notif = new RealTimeNotifications(userData.id);
+
+    const newUserFb = new NewUser(userData.id);
+
+    await newUserFb.setData({
+      id: user.id,
+      name: user.lname + ', ' + user.fname + ' ' + user.mname,
+      picture,
+    });
 
     if (isAccepted) {
       await this.mailService.sendMail(

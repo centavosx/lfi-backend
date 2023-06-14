@@ -6,6 +6,11 @@ export class UserInfoDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  picture?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   fname?: string;
 
   @ApiPropertyOptional()

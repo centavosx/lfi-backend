@@ -4,7 +4,6 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
-  IsNotEmptyObject,
   IsObject,
   IsOptional,
   IsString,
@@ -13,6 +12,11 @@ import {
 import { Level, Roles, UserStatus } from '../../../enum';
 
 export class UserInformationDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  picture?: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -86,6 +90,11 @@ export class UserInformationDto {
 }
 
 export class CreateUserDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  picture?: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
