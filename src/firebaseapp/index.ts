@@ -10,14 +10,13 @@ import {
 } from 'firebase/firestore';
 
 const initialized = initializeApp({
-  apiKey: 'AIzaSyCQGoZzlG256V4IruJAtB7TaB8hAojcNxE',
-  authDomain: 'laofi-d1191.firebaseapp.com',
-  projectId: 'laofi-d1191',
-  storageBucket: 'laofi-d1191.appspot.com',
-  messagingSenderId: '575738894689',
-  appId: '1:575738894689:web:95fbc9017799730c890d20',
-  databaseURL:
-    'https://laofi-d1191-default-rtdb.asia-southeast1.firebasedatabase.app',
+  apiKey: process.env.FB_API_KEY,
+  authDomain: process.env.FB_AUTH_DOMAIN,
+  projectId: process.env.FB_PROJECT_ID,
+  storageBucket: process.env.FB_STORAGE_BUCKET,
+  messagingSenderId: process.env.FB_MESSAGING_ID,
+  appId: process.env.FB_APP_ID,
+  databaseURL: process.env.FB_DATABASE_URL,
 });
 
 const db = getFirestore(initialized);
