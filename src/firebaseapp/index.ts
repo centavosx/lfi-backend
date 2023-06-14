@@ -7,6 +7,13 @@ import {
   QuerySnapshot,
   DocumentData,
   addDoc,
+  writeBatch,
+  runTransaction,
+  query,
+  where,
+  limit,
+  getDocs,
+  doc,
 } from 'firebase/firestore';
 
 const initialized = initializeApp({
@@ -20,6 +27,57 @@ const initialized = initializeApp({
 });
 
 const db = getFirestore(initialized);
+
+export class NewUser {
+  private id: string;
+  constructor(id: string) {
+    this.id = id;
+  }
+
+  public async setData({
+    id,
+    name,
+    picture,
+  }: {
+    name: string;
+    id: string;
+    picture?: string;
+  }) {
+    try {
+      await runTransaction(db, async (transaction) => {
+        const q = query(
+          collection(db, 'users'),
+          where('id', '==', this.id),
+          limit(1),
+        );
+
+        const searchQuery = await getDocs(q);
+
+        if (searchQuery.empty) {
+          const newUser = doc(collection(db, 'users'));
+
+          transaction.set(doc(db, 'users', newUser.id), {
+            id,
+            name,
+            modified: Timestamp.now().toMillis(),
+            ...(!!picture ? { picture } : {}),
+          });
+          return;
+        } else {
+          searchQuery.forEach((v) => {
+            const ref = doc(db, 'users', v.id);
+            transaction.update(ref, {
+              id,
+              name,
+              modified: Timestamp.now().toMillis(),
+              ...(!!picture ? { picture } : {}),
+            });
+          });
+        }
+      });
+    } catch {}
+  }
+}
 
 export class RealTimeNotifications<
   T extends Record<string, any> = Record<string, any>,

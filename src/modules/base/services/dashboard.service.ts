@@ -1,14 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Events, User } from '../../../entities';
-import {
-  Repository,
-  MoreThan,
-  LessThan,
-  Between,
-  LessThanOrEqual,
-  DataSource,
-} from 'typeorm';
+import { Repository, MoreThan, LessThanOrEqual, DataSource } from 'typeorm';
 import { UserStatus } from 'src/enum';
 
 @Injectable()
