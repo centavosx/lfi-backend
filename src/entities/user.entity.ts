@@ -13,6 +13,8 @@ import { Exclude } from 'class-transformer';
 
 import { Role } from './role.entity';
 import { Level, UserStatus } from '../enum';
+import { UserFiles } from './user-files.entity';
+import { Scholar } from './scholar.entity';
 
 @Entity()
 export class User {
@@ -47,42 +49,6 @@ export class User {
   @Column({ nullable: true })
   program?: string | null;
 
-  @Column({ nullable: true, name: 'id_pic' })
-  idPic?: string | null;
-
-  @Column({ nullable: true })
-  ncae?: string | null;
-
-  @Column({ nullable: true })
-  certificate?: string | null;
-
-  @Column({ nullable: true })
-  pantawid?: string | null;
-
-  @Column({ nullable: true, name: 'grade_slip' })
-  gradeSlip?: string | null;
-
-  @Column({ nullable: true, name: 'birth_cert' })
-  birthCert?: string | null;
-
-  @Column({ nullable: true })
-  autobiography?: string | null;
-
-  @Column({ nullable: true, name: 'home_sketch' })
-  homeSketch?: string | null;
-
-  @Column({ nullable: true, name: 'water_bill' })
-  waterBill?: string | null;
-
-  @Column({ nullable: true, name: 'electric_bill' })
-  electricBill?: string | null;
-
-  @Column({ nullable: true, name: 'wifi_bill' })
-  wifiBill?: string | null;
-
-  @Column({ nullable: true, name: 'enrollment_bill' })
-  enrollmentBill?: string | null;
-
   @Exclude()
   @Column({ nullable: true, default: null })
   code?: string | null;
@@ -96,6 +62,28 @@ export class User {
     inverseJoinColumn: { name: 'role_id' },
   })
   roles: Role[];
+
+  @Exclude()
+  @OneToMany(() => UserFiles, (files) => files.user, {
+    eager: true,
+  })
+  @JoinTable({
+    name: 'user_files',
+    joinColumn: { name: 'user_id' },
+    inverseJoinColumn: { name: 'id' },
+  })
+  files: UserFiles[];
+
+  @Exclude()
+  @OneToMany(() => Scholar, (scholar) => scholar.user, {
+    eager: true,
+  })
+  @JoinTable({
+    name: 'scholar',
+    joinColumn: { name: 'user_id' },
+    inverseJoinColumn: { name: 'id' },
+  })
+  scholar: Scholar[];
 
   @Column({ nullable: true })
   accepted?: Date | null;

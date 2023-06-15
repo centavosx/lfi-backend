@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Role, User } from '../../../entities';
+import { FileTypes, Role, User, UserFiles } from '../../../entities';
 import { DataSource, Repository, Raw, In } from 'typeorm';
 
 import {
@@ -39,9 +39,43 @@ export class BaseService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(UserFiles)
+    private readonly fileRepository: Repository<UserFiles>,
+
     private readonly tokenService: TokenService,
     private readonly mailService: MailService,
   ) {}
+
+  private getFileTypeEnum(file: string): FileTypes | undefined {
+    switch (file) {
+      case 'idPic':
+        return FileTypes.ID_PIC;
+      case 'ncae':
+        return FileTypes.NCAE;
+      case 'certificate':
+        return FileTypes.CERT;
+      case 'pantawid':
+        return FileTypes.PANTAWID;
+      case 'gradeSlip':
+        return FileTypes.GRADE_SLIP;
+      case 'birthCert':
+        return FileTypes.BIRTH_CERT;
+      case 'autobiography':
+        return FileTypes.BIO;
+      case 'homeSketch':
+        return FileTypes.HOME_SKETCH;
+      case 'waterBill':
+        return FileTypes.WATER_BILL;
+      case 'electricBill':
+        return FileTypes.ELECTRIC_BILL;
+      case 'wifiBill':
+        return FileTypes.WIFI_BILL;
+      case 'enrollmentBill':
+        return FileTypes.ENROLLMENT_BILL;
+      default:
+        return undefined;
+    }
+  }
 
   public async getAll(query: SearchUserDto): Promise<ResponseDto> {
     const findData = {
@@ -182,6 +216,23 @@ export class BaseService {
     isVerification?: boolean,
     uData?: UserInformationDto,
   ) {
+    const info = !!uData ? uData : data;
+
+    const extractFiles: UserFiles[] = Object.keys(info)
+      .filter((v) => {
+        const isTrue = !!this.getFileTypeEnum(v);
+
+        return isTrue;
+      })
+      .map((v) => {
+        const newFile = new UserFiles();
+        newFile.link = info[v];
+        newFile.type = this.getFileTypeEnum(v);
+        if (!!uData) delete uData[v];
+        else delete data[v];
+        return newFile;
+      });
+
     let user: User;
     const queryRunner = this.dataSource.createQueryRunner();
     const picture = uData.picture;
@@ -225,9 +276,19 @@ export class BaseService {
         relations: ['roles'],
       });
 
+      await this.userRepository.query(
+        `
+        DELETE FROM "user_files" WHERE user_id = $1
+      `,
+        [checkAndAddUser.id],
+      );
+
       checkAndAddUser.roles = roles;
 
       await this.userRepository.save(checkAndAddUser);
+      await this.fileRepository.save(
+        extractFiles.map((v) => ({ ...v, user: checkAndAddUser })),
+      );
 
       try {
         if (isVerification) {
@@ -498,9 +559,23 @@ export class BaseService {
       where: {
         id,
       },
+      relations: ['files'],
     });
 
     if (!userData) throw new NotFoundException();
+
+    const extractFiles: UserFiles[] = Object.keys(rest)
+      .filter((v) => {
+        const isTrue = !!this.getFileTypeEnum(v);
+        return isTrue;
+      })
+      .map((v) => {
+        const newFile = new UserFiles();
+        newFile.link = rest[v];
+        newFile.type = this.getFileTypeEnum(v);
+        delete rest[v];
+        return newFile;
+      });
 
     const isUser = userData.roles.some((v) => v.name === Roles.USER);
     if (!isUser && !user.roles.some((v) => v.name === Roles.SUPER))
