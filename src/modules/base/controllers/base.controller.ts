@@ -17,10 +17,12 @@ import {
   DeleteDto,
   ForgotPassDto,
   LoginDto,
+  RenewalDto,
   ResetTokenDto,
   ScholarDto,
   SearchSingle,
   SearchUserDto,
+  SubmitEnrolmentBillDto,
   SuperUserDto,
   UpdateRoleDto,
 } from '../dto';
@@ -57,7 +59,8 @@ export class BaseController {
           v.name === RoleTypes.USER ||
           (v.name !== RoleTypes.SUPER && v.name !== RoleTypes.ADMIN_READ),
       ) &&
-      id !== 'me'
+      id !== 'me' &&
+      id !== user.id
     )
       throw new ForbiddenException('Not allowed');
 
@@ -174,5 +177,49 @@ export class BaseController {
     )
       throw new ForbiddenException('Not allowed');
     return await this.baseService.updateUsers({ ...data, id: userId }, user);
+  }
+
+  @Roles(RoleTypes.SUPER, RoleTypes.ADMIN_WRITE, RoleTypes.USER)
+  @Post('renewal/' + Parameter.id())
+  public async newExistingApplication(
+    @Body() data: RenewalDto,
+    @User() user: Usertype,
+    @Param('id')
+    id: string,
+  ) {
+    const userId = id === 'me' ? user.id : id;
+    if (
+      user.roles.every(
+        (v) =>
+          v.name === RoleTypes.USER ||
+          (v.name !== RoleTypes.SUPER && v.name !== RoleTypes.ADMIN_WRITE),
+      ) &&
+      id !== 'me' &&
+      id !== user.id
+    )
+      throw new ForbiddenException('Not allowed');
+    return await this.baseService.submitExistingScholar(userId, data);
+  }
+
+  @Roles(RoleTypes.SUPER, RoleTypes.ADMIN_WRITE, RoleTypes.USER)
+  @Post('enrollmentBill/' + Parameter.id())
+  public async submitEnrollmentBill(
+    @Body() data: SubmitEnrolmentBillDto,
+    @User() user: Usertype,
+    @Param('id')
+    id: string,
+  ) {
+    const userId = id === 'me' ? user.id : id;
+    if (
+      user.roles.every(
+        (v) =>
+          v.name === RoleTypes.USER ||
+          (v.name !== RoleTypes.SUPER && v.name !== RoleTypes.ADMIN_WRITE),
+      ) &&
+      id !== 'me' &&
+      id !== user.id
+    )
+      throw new ForbiddenException('Not allowed');
+    return await this.baseService.submitEnrollmentBill(userId, data);
   }
 }

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FileTypes, Role, Scholar, User, UserFiles } from '../../../entities';
-import { DataSource, Repository, Raw, In, QueryFailedError } from 'typeorm';
+import { DataSource, Repository, Raw, In } from 'typeorm';
 
 import {
   LoginDto,
@@ -19,7 +19,8 @@ import {
   UpdateRoleDto,
   SuperUserDto,
   UserInformationDto,
-  ScholarDto,
+  RenewalDto,
+  SubmitEnrolmentBillDto,
 } from '../dto';
 
 import { ifMatched, hashPassword } from '../../../helpers/hash.helper';
@@ -92,8 +93,6 @@ export class BaseService {
       status: !!query.status ? In(query.status) : undefined,
     };
 
-    this.userRepository.createQueryBuilder('user').select;
-
     const data = await this.userRepository.find({
       where: [
         {
@@ -124,6 +123,7 @@ export class BaseService {
       skip: (query.page ?? 0) * (query.limit ?? 20),
       take: query.limit ?? 20,
       relations: ['scholar'],
+      withDeleted: true,
     });
 
     const total = await this.userRepository.count({
@@ -155,6 +155,7 @@ export class BaseService {
       ],
 
       relations: ['scholar'],
+      withDeleted: true,
     });
     return {
       data,
@@ -181,6 +182,7 @@ export class BaseService {
         email: email,
         roles: !!roleName ? [role] : undefined,
       },
+      withDeleted: true,
       relations: ['scholar', 'roles'],
     });
 
@@ -280,9 +282,11 @@ export class BaseService {
 
     let user: User;
     const queryRunner = this.dataSource.createQueryRunner();
-    const picture = uData.picture;
-
-    delete uData.picture;
+    let picture;
+    if (!!uData) {
+      picture = uData?.picture;
+      delete uData?.picture;
+    }
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -306,15 +310,17 @@ export class BaseService {
         (newUser.email = data.email);
 
       const obj = {};
+
       Object.keys(newUser).forEach((v) => {
         if (v in data) {
           obj[v] = data[v];
-        } else if (v in uData) {
+        } else if (!!uData && v in uData) {
           obj[v] = uData[v];
         }
       });
 
       Object.assign(newUser, {
+        id: data.id,
         ...obj,
         password: !!pw ? await hashPassword(pw) : undefined,
         ...(!!uData
@@ -324,39 +330,46 @@ export class BaseService {
           : {}),
       });
 
-      user = await queryRunner.manager.save(newUser);
+      user = newUser;
 
-      const checkAndAddUser = await this.userRepository.findOne({
-        where: {
-          id: user.id,
-        },
-        relations: ['roles'],
-      });
+      const checkAndAddUser = !!user.id
+        ? await this.userRepository.findOne({
+            where: {
+              id: user.id,
+            },
+            relations: ['roles'],
+          })
+        : user;
 
-      await queryRunner.manager.query(
-        `
+      if (checkAndAddUser.id) {
+        await queryRunner.manager.query(
+          `
        DELETE FROM "user_files" WHERE user_id = $1
       `,
-        [checkAndAddUser.id],
-      );
+          [checkAndAddUser.id],
+        );
 
-      await queryRunner.manager.query(
-        `
+        await queryRunner.manager.query(
+          `
        DELETE FROM "scholar" WHERE user_id = $1
       `,
-        [checkAndAddUser.id],
-      );
-
+          [checkAndAddUser.id],
+        );
+      }
       checkAndAddUser.roles = roles;
 
-      await queryRunner.manager.save(checkAndAddUser);
-      await queryRunner.manager.save(
+      const userRepoTemp = queryRunner.manager.getRepository(User);
+      const tempoUser = await userRepoTemp.save(checkAndAddUser);
+
+      const userFilesRepoTemp = queryRunner.manager.getRepository(UserFiles);
+      await userFilesRepoTemp.save(
         extractFiles.map((v) => ({
           ...new UserFiles(),
           ...v,
           user: checkAndAddUser,
         })),
       );
+
       if (!isAdmin || isVerification) {
         const newScholar = new Scholar();
         newScholar.user = checkAndAddUser;
@@ -386,6 +399,14 @@ export class BaseService {
       }
 
       if (isVerification) {
+        const newUserFb = new NewUser(tempoUser.id);
+
+        await newUserFb.setData({
+          id: tempoUser.id,
+          name: user.lname + ', ' + user.fname + ' ' + user.mname,
+          picture,
+        });
+
         await this.mailService.sendMail(
           user.email,
           'Please verify your account',
@@ -396,10 +417,10 @@ export class BaseService {
         );
       } else if (!!uData && data.status === UserStatus.ACTIVE && !isAdmin) {
         //new user
-        const newUserFb = new NewUser(user.id);
+        const newUserFb = new NewUser(tempoUser.id);
 
         await newUserFb.setData({
-          id: user.id,
+          id: tempoUser.id,
           name: user.lname + ', ' + user.fname + ' ' + user.mname,
           picture,
         });
@@ -433,6 +454,7 @@ export class BaseService {
 
       await queryRunner.commitTransaction();
     } catch (err) {
+      console.log(err);
       await queryRunner.rollbackTransaction();
     } finally {
       await queryRunner.release();
@@ -471,9 +493,16 @@ export class BaseService {
     let dataToSave: CreateUserDto | CreateUserFromAdminDto | User = data;
 
     const isUserExist = await this.userRepository.findOne({
-      where: {
-        email: dataToSave.email,
-      },
+      where: [
+        {
+          email: dataToSave.email,
+        },
+        {
+          fname: data.fname,
+          mname: data.mname,
+          lname: data.lname,
+        },
+      ],
     });
 
     if (!!isUserExist) {
@@ -640,16 +669,16 @@ export class BaseService {
     user: User,
   ) {
     const picture = rest.picture;
-
-    delete rest.picture;
+    if (!!rest.picture) delete rest.picture;
 
     const userData = await this.userRepository.findOne({
       where: {
         id,
       },
       relations: ['files'],
+      withDeleted: true,
     });
-
+    const isExisted = !!userData.password;
     if (!userData) throw new NotFoundException();
 
     const extractFiles: UserFiles[] = Object.keys(rest)
@@ -699,8 +728,7 @@ export class BaseService {
 
       Object.assign(userData, {
         ...obj,
-        ...(isAccepted ? { accepted: new Date() } : {}),
-        ...(isExpelled ? { deleted: new Date() } : {}),
+        ...(isExpelled ? { deleted: new Date() } : { deleted: null }),
         ...(!!pw && userData.password === null
           ? { password: await hashPassword(pw) }
           : {}),
@@ -710,15 +738,23 @@ export class BaseService {
         throw new BadRequestException('Wrong old password');
 
       if (!!password) userData.password = await hashPassword(password);
-      await queryRunner.manager.save(userData);
+
+      const userRepo = queryRunner.manager.getRepository(User);
+
+      await userRepo.save(userData);
+
       if (!!isUser) {
         const scholar = await this.scholarRepository.findOne({
           where: {
-            id,
+            user: {
+              id,
+            },
           },
           order: {
             created: 'DESC',
           },
+          relations: ['user'],
+          withDeleted: true,
         });
 
         scholar.accepted = isAccepted ? new Date() : undefined;
@@ -754,8 +790,9 @@ export class BaseService {
           )
           .orIgnore()
           .execute();
+        const scholarRepo = queryRunner.manager.getRepository(Scholar);
 
-        await queryRunner.manager.save(scholar);
+        await scholarRepo.save(scholar);
       }
 
       const notif = new RealTimeNotifications(userData.id);
@@ -763,21 +800,33 @@ export class BaseService {
       const newUserFb = new NewUser(userData.id);
 
       await newUserFb.setData({
-        id: user.id,
+        id: userData.id,
         name: user.lname + ', ' + user.fname + ' ' + user.mname,
         picture,
       });
 
       if (isAccepted) {
-        await this.mailService.sendMail(
-          userData.email,
-          'You have been accepted',
-          'acceptance-scholar',
-          {
-            email: userData.email,
-            password: pw,
-          },
-        );
+        if (isExisted) {
+          await this.mailService.sendMail(
+            userData.email,
+            'You have been accepted',
+            'acceptance-existing',
+            {
+              email: userData.email,
+              password: pw,
+            },
+          );
+        } else {
+          await this.mailService.sendMail(
+            userData.email,
+            'You have been accepted',
+            'acceptance-scholar',
+            {
+              email: userData.email,
+              password: pw,
+            },
+          );
+        }
 
         await notif.sendData({
           title: 'Congratulations!',
@@ -797,15 +846,62 @@ export class BaseService {
         await notif.sendData({
           title: 'You have been expelled',
           description:
-            "I'm sorry to say this but we decided to expell you due to the requirement has not been met or violations.",
+            "I'm sorry to say this but we decided to expell you due to the requirement has not been met or you have any violations.",
         });
       }
       await queryRunner.commitTransaction();
     } catch (err) {
+      console.log(err);
       await queryRunner.rollbackTransaction();
     } finally {
       await queryRunner.release();
     }
+    return;
+  }
+
+  public async submitExistingScholar(id: string, data: RenewalDto) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
+    if (!user) throw new NotFoundException();
+    const newScholar = new Scholar();
+    newScholar.status = 'pending';
+    Object.assign(newScholar, { ...data, user });
+    await this.scholarRepository.save(newScholar);
+    const notif = new RealTimeNotifications(id);
+
+    await notif.sendData({
+      title: 'You have submitted a renewal',
+      description:
+        "Please wait for our admin to process your application. (Remember: Submit enrollment bill or you can't proceed to the next application)",
+    });
+
+    return;
+  }
+
+  public async submitEnrollmentBill(id: string, data: SubmitEnrolmentBillDto) {
+    const user = await this.scholarRepository.findOne({
+      where: {
+        user: {
+          id,
+        },
+      },
+      order: {
+        created: 'DESC',
+      },
+      withDeleted: true,
+      relations: ['user'],
+    });
+    if (!user) throw new NotFoundException();
+    user.enrollmentBill = data.enrollmentBill;
+    await this.scholarRepository.save(user);
+    const notif = new RealTimeNotifications(id);
+
+    await notif.sendData({
+      title: 'Enrollment Bill Submitted',
+      description: 'Thank you for submitting you enrollmentBill!',
+    });
+
     return;
   }
 }

@@ -23,26 +23,26 @@ export class User {
   id: string;
 
   @Column({ nullable: false })
-  fname: string;
+  fname: string = null;
 
   @Column({ nullable: true })
-  mname: string | null;
+  mname: string | null = null;
 
   @Column({ nullable: false })
-  lname: string;
+  lname: string = null;
 
   @Column({ nullable: false, unique: true })
-  email: string;
+  email: string = null;
 
   @Column({ nullable: false, default: UserStatus.PENDING })
-  status: UserStatus;
+  status: UserStatus = UserStatus.PENDING;
 
   @Exclude()
   @Column({ nullable: true })
-  password?: string | null;
+  password?: string | null = null;
 
   @Column({ nullable: true })
-  address?: string | null;
+  address?: string | null = null;
 
   @Exclude()
   @Column({ nullable: true, default: null })

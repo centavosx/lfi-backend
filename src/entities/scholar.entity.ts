@@ -15,39 +15,36 @@ export class Scholar {
   id: string;
 
   @Column({ name: 'last_gwa' })
-  lastGwa: number;
+  lastGwa: number = null;
 
   @Column({ name: 'grade_slip', unique: true })
-  gradeSlip: string;
+  gradeSlip: string = null;
 
   @Column({ name: 'enrollment_bill', nullable: true, unique: true })
-  enrollmentBill: string;
+  enrollmentBill: string = null;
 
   @Column({ name: 'status' })
-  status: 'pending' | 'started' | 'ended' | 'rejected' | 'verify';
+  status: 'pending' | 'started' | 'ended' | 'rejected' | 'verify' = 'verify';
 
   @ManyToOne(() => User, (user) => user.scholar)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column()
-  education: Education;
+  education: Education = null;
 
   @Column()
-  level: Level;
+  level: Level = null;
 
   @Column()
-  semester: number;
-
-  @Column()
-  program?: string | null;
+  program?: string | null = null;
 
   @Column({ nullable: true })
-  accepted?: Date | null;
+  accepted?: Date | null = null;
 
   @CreateDateColumn()
   created: Date;
 
   @Column({ nullable: true })
-  ended: Date | null;
+  ended: Date | null = null;
 }

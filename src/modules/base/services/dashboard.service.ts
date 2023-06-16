@@ -15,6 +15,7 @@ export class DashboardService {
 
   //Run in non-concurrent since the current database only handles up to three connections
   public async getDashboard(timeZone: string, status: UserStatus) {
+    console.log(status);
     const upcomingEvents = await this.eventsRepository.find({
       where: [
         {
@@ -31,6 +32,7 @@ export class DashboardService {
       `SELECT TO_CHAR(timezone($1, "user".created),'YYYY') AS "x", count(TO_CHAR(timezone($1, "user".created), 'YYYY')) AS "y" FROM "user"
             LEFT JOIN user_role ON user_role.user_id = "user".id 
             LEFT JOIN role "role" ON user_role.role_id = "role".id  
+            LEFT JOIN scholar "scholar" ON  scholar.user_id = "user".id
               WHERE "user".status = $2
               AND "role".name = 'user' 
           GROUP BY TO_CHAR(timezone($1, "user".created),'YYYY')`,
@@ -38,7 +40,7 @@ export class DashboardService {
     );
 
     const userCounts = await this.userRepository.query(`
-        SELECT 
+		 SELECT 
           CASE 
             WHEN role_name = 'super' OR role_name LIKE 'admin%' 
             THEN 'employee'
@@ -53,7 +55,7 @@ export class DashboardService {
             ) as "count" 
         FROM (	
           SELECT "role".name as "role_name", ROW_NUMBER() over 
-                (partition by  "user".id,
+                (partition by "user".id,
             CASE 
                 WHEN "role".name = 'super' OR "role".name LIKE 'admin%' 
                 THEN 'employee'
@@ -66,10 +68,7 @@ export class DashboardService {
           FROM "user" 
             LEFT JOIN user_role ON user_role.user_id = "user".id 
             LEFT JOIN role "role" ON user_role.role_id = "role".id  
-            WHERE 
-              ("role".name = 'user' AND 
-              ("user".accepted IS NOT NULL AND "user".status = 'active'))
-              OR (("role".name LIKE 'admin%' OR "role".name = 'super') AND "user".status = 'active')
+          WHERE (("role".name LIKE 'admin%' OR "role".name = 'super') AND "user".status = 'active')
         ) as "grouped_user"
         WHERE rank = 1 
         GROUP BY
@@ -78,12 +77,13 @@ export class DashboardService {
             THEN 'employee'
             ELSE role_name
           END
-        UNION
-        SELECT DISTINCT REPLACE("user".status, 'verified', 'applicant') as "name", COUNT("user".status) as "count" FROM "user"
+		UNION
+        SELECT DISTINCT REPLACE(REPLACE("scholar".status, 'pending', 'applicant'), 'active', 'scholar') as "name", COUNT("scholar".status) as "count" FROM "user"
           LEFT JOIN user_role ON user_role.user_id = "user".id 
           LEFT JOIN role "role" ON user_role.role_id = "role".id  
-            WHERE "role".name = 'user' AND "user".status = 'verified'
-        GROUP BY  "user".status
+          LEFT JOIN scholar "scholar" ON  scholar.user_id = "user".id
+            WHERE "role".name = 'user' AND "scholar".status = 'pending' OR "scholar".status='started'
+        GROUP BY  "scholar".status, "user".id
         
       `);
 
