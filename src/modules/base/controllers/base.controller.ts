@@ -8,7 +8,7 @@ import {
   Headers,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Param } from '@nestjs/common/decorators';
+import { Param, Put } from '@nestjs/common/decorators';
 import { Roles } from '../../../decorators/roles.decorator';
 import {
   CodeDto,
@@ -18,6 +18,7 @@ import {
   ForgotPassDto,
   LoginDto,
   ResetTokenDto,
+  ScholarDto,
   SearchSingle,
   SearchUserDto,
   SuperUserDto,
@@ -116,7 +117,7 @@ export class BaseController {
   public async regularLogin(@Body() data: LoginDto) {
     return await this.baseService.loginUser(data);
   }
-  r;
+
   @Roles(RoleTypes.ADMIN_READ, RoleTypes.SUPER)
   @Get('search')
   public async searchUser(@Query() search: SearchSingle) {

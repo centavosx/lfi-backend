@@ -1,3 +1,4 @@
+import { Education, Level } from '../enum';
 import {
   Column,
   CreateDateColumn,
@@ -13,24 +14,36 @@ export class Scholar {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  name: string;
-
-  @Column()
+  @Column({ name: 'last_gwa' })
   lastGwa: number;
 
-  @Column({ name: 'grade_slip' })
+  @Column({ name: 'grade_slip', unique: true })
   gradeSlip: string;
 
-  @Column({ name: 'enrollment_slip', nullable: true })
-  enrollmentSlip: string;
+  @Column({ name: 'enrollment_bill', nullable: true, unique: true })
+  enrollmentBill: string;
 
   @Column({ name: 'status' })
-  status: 'started' | 'ended';
+  status: 'pending' | 'started' | 'ended' | 'rejected' | 'verify';
 
   @ManyToOne(() => User, (user) => user.scholar)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column()
+  education: Education;
+
+  @Column()
+  level: Level;
+
+  @Column()
+  semester: number;
+
+  @Column()
+  program?: string | null;
+
+  @Column({ nullable: true })
+  accepted?: Date | null;
 
   @CreateDateColumn()
   created: Date;

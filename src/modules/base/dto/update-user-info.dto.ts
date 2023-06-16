@@ -112,4 +112,9 @@ export class UserInfoDto {
   @IsOptional()
   @IsString()
   old?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  scholarStatus?: 'pending' | 'started' | 'ended' | 'rejected' | 'verify';
 }

@@ -38,37 +38,53 @@ export class DashboardService {
     );
 
     const userCounts = await this.userRepository.query(`
-      SELECT DISTINCT 
-              CASE 
+        SELECT 
+          CASE 
+            WHEN role_name = 'super' OR role_name LIKE 'admin%' 
+            THEN 'employee'
+            ELSE role_name 
+            END as "name", 
+          COUNT(
+            CASE 
+              WHEN role_name  = 'super' OR role_name  LIKE 'admin%' 
+              THEN 'employee'
+              ELSE role_name 
+            END
+            ) as "count" 
+        FROM (	
+          SELECT "role".name as "role_name", ROW_NUMBER() over 
+                (partition by  "user".id,
+            CASE 
                 WHEN "role".name = 'super' OR "role".name LIKE 'admin%' 
                 THEN 'employee'
                 ELSE "role".name
-              END as "name", 
-            COUNT(
-              CASE 
+              END order by CASE 
                 WHEN "role".name = 'super' OR "role".name LIKE 'admin%' 
                 THEN 'employee'
                 ELSE "role".name
-              END) as "count" 
-        FROM "user"
-          LEFT JOIN user_role ON user_role.user_id = "user".id 
-          LEFT JOIN role "role" ON user_role.role_id = "role".id  
+            END ASC) as rank 
+          FROM "user" 
+            LEFT JOIN user_role ON user_role.user_id = "user".id 
+            LEFT JOIN role "role" ON user_role.role_id = "role".id  
             WHERE 
               ("role".name = 'user' AND 
-                ("user".accepted IS NOT NULL AND "user".status = 'active'))
+              ("user".accepted IS NOT NULL AND "user".status = 'active'))
               OR (("role".name LIKE 'admin%' OR "role".name = 'super') AND "user".status = 'active')
-        GROUP BY 
-                CASE 
-                  WHEN "role".name = 'super' OR "role".name LIKE 'admin%' 
-                  THEN 'employee'
-                  ELSE "role".name
-                END
+        ) as "grouped_user"
+        WHERE rank = 1 
+        GROUP BY
+          CASE	 
+            WHEN role_name = 'super' OR role_name LIKE 'admin%' 
+            THEN 'employee'
+            ELSE role_name
+          END
         UNION
         SELECT DISTINCT REPLACE("user".status, 'verified', 'applicant') as "name", COUNT("user".status) as "count" FROM "user"
           LEFT JOIN user_role ON user_role.user_id = "user".id 
           LEFT JOIN role "role" ON user_role.role_id = "role".id  
             WHERE "role".name = 'user' AND "user".status = 'verified'
-        GROUP BY "user".status
+        GROUP BY  "user".status
+        
       `);
 
     return {

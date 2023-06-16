@@ -3,14 +3,11 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToMany,
   ManyToOne,
   JoinColumn,
-  OneToOne,
-  JoinTable,
+  CreateDateColumn,
 } from 'typeorm';
-import { Roles } from '../enum';
-import { Scholar } from './scholar.entity';
+
 import { User } from './user.entity';
 
 export enum FileTypes {
@@ -43,11 +40,6 @@ export class UserFiles {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  // @OneToOne(() => Scholar, (scholar) => scholar.gradeSlip)
-  // @JoinTable({
-  //   name: 'scholar',
-  //   joinColumn: { name: 'grade_slip' },
-  //   inverseJoinColumn: { name: 'id' },
-  // })
-  // scholar: Scholar | null;
+  @CreateDateColumn()
+  date: Date;
 }

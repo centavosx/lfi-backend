@@ -4,12 +4,13 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Level, Roles, UserStatus } from '../../../enum';
+import { Education, Level, Roles, UserStatus } from '../../../enum';
 
 export class UserInformationDto {
   @ApiPropertyOptional()
@@ -22,6 +23,17 @@ export class UserInformationDto {
   @IsNotEmpty()
   @IsEnum(Level)
   level: Level;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(Education)
+  education: Education;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  semester: number;
 
   @ApiProperty()
   @IsString()
@@ -120,6 +132,17 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsEnum(Level)
   level: Level;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(Education)
+  education: Education;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  semester: number;
 
   @ApiProperty()
   @IsString()
@@ -286,4 +309,21 @@ export class CodeDto {
   @IsString()
   @IsNotEmpty()
   code: string;
+}
+
+export class ScholarDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  lastGwa: number;
 }

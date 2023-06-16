@@ -1,6 +1,16 @@
-export enum Level {
+export enum Education {
   SHS = 'SHS',
   COLLEGE = 'College',
+}
+
+export enum Level {
+  first1stSem = '1st year',
+  second = '2nd year',
+  third = '3rd year',
+  fourth = '4th year',
+  fifth = '5th year',
+  sixth = '6th year',
+  summer = 'Summer',
 }
 
 export enum ShsTrackAndStrandsEnum {

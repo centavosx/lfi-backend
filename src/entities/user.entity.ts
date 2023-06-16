@@ -8,11 +8,12 @@ import {
   UpdateDateColumn,
   CreateDateColumn,
   DeleteDateColumn,
+  AfterLoad,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 
 import { Role } from './role.entity';
-import { Level, UserStatus } from '../enum';
+import { UserStatus } from '../enum';
 import { UserFiles } from './user-files.entity';
 import { Scholar } from './scholar.entity';
 
@@ -43,12 +44,6 @@ export class User {
   @Column({ nullable: true })
   address?: string | null;
 
-  @Column({ nullable: true })
-  level?: Level | null;
-
-  @Column({ nullable: true })
-  program?: string | null;
-
   @Exclude()
   @Column({ nullable: true, default: null })
   code?: string | null;
@@ -63,9 +58,8 @@ export class User {
   })
   roles: Role[];
 
-  @Exclude()
   @OneToMany(() => UserFiles, (files) => files.user, {
-    eager: true,
+    eager: false,
   })
   @JoinTable({
     name: 'user_files',
@@ -74,9 +68,8 @@ export class User {
   })
   files: UserFiles[];
 
-  @Exclude()
   @OneToMany(() => Scholar, (scholar) => scholar.user, {
-    eager: true,
+    eager: false,
   })
   @JoinTable({
     name: 'scholar',
@@ -84,9 +77,6 @@ export class User {
     inverseJoinColumn: { name: 'id' },
   })
   scholar: Scholar[];
-
-  @Column({ nullable: true })
-  accepted?: Date | null;
 
   @CreateDateColumn()
   created: Date;
@@ -96,4 +86,11 @@ export class User {
 
   @DeleteDateColumn()
   deleted?: Date | null;
+
+  isExistingScholar: boolean;
+
+  @AfterLoad()
+  getScholar() {
+    this.isExistingScholar = !!this.scholar && this.scholar.length > 0;
+  }
 }
