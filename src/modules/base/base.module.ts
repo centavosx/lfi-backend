@@ -2,7 +2,15 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TokenService } from '../../authentication/services/token.service';
 import { MailService } from '../../mail/mail.service';
-import { Role, User, Token, Events, Announcements } from '../../entities';
+import {
+  Role,
+  User,
+  Token,
+  Events,
+  Announcements,
+  UserFiles,
+  Scholar,
+} from '../../entities';
 import {
   AnnouncementController,
   BaseController,
@@ -20,7 +28,15 @@ import {
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, Token, Events, Announcements]),
+    TypeOrmModule.forFeature([
+      User,
+      Role,
+      Token,
+      Events,
+      Announcements,
+      UserFiles,
+      Scholar,
+    ]),
   ],
   controllers: [
     BaseController,
@@ -39,7 +55,15 @@ import {
     DashboardService,
   ],
   exports: [
-    TypeOrmModule.forFeature([User, Role, Token, Events, Announcements]),
+    TypeOrmModule.forFeature([
+      User,
+      Role,
+      Token,
+      Events,
+      Announcements,
+      UserFiles,
+      Scholar,
+    ]),
   ],
 })
 export class BaseModule {}

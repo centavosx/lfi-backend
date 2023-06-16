@@ -7,7 +7,6 @@ import {
   QuerySnapshot,
   DocumentData,
   addDoc,
-  writeBatch,
   runTransaction,
   query,
   where,

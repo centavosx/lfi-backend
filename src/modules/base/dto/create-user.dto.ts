@@ -1,15 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Level, Roles, UserStatus } from '../../../enum';
+import { Education, Level, Roles, UserStatus } from '../../../enum';
+const toNumber = (value: any): number => {
+  return !isNaN(value.value) ? Number(value.value) : value.value;
+};
 
 export class UserInformationDto {
   @ApiPropertyOptional()
@@ -26,7 +30,19 @@ export class UserInformationDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  @IsEnum(Education)
+  education: Education;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   program: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @Transform(toNumber)
+  @IsNumber()
+  lastGwa: number;
 
   @ApiProperty()
   @IsString()
@@ -120,6 +136,18 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsEnum(Level)
   level: Level;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(Education)
+  education: Education;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @Transform(toNumber)
+  @IsNumber()
+  lastGwa: number;
 
   @ApiProperty()
   @IsString()
@@ -286,4 +314,62 @@ export class CodeDto {
   @IsString()
   @IsNotEmpty()
   code: string;
+}
+
+export class ScholarDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  lastGwa: number;
+}
+
+export class RenewalDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  lastGwa: number;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(Level)
+  level: Level;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(Education)
+  education: Education;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  program: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  gradeSlip: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  enrollmentBill?: string;
+}
+
+export class SubmitEnrolmentBillDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  enrollmentBill: string;
 }

@@ -1,6 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { Level, UserStatus } from '../../../enum';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { Education, Level, UserStatus } from '../../../enum';
+import { Transform } from 'class-transformer';
+const toNumber = (value: any): number => {
+  return !isNaN(value.value) ? Number(value.value) : value.value;
+};
 
 export class UserInfoDto {
   @ApiPropertyOptional()
@@ -32,6 +42,17 @@ export class UserInfoDto {
   @IsOptional()
   @IsEnum(Level)
   level?: Level;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(Education)
+  education?: Education;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(toNumber)
+  @IsNumber()
+  lastGwa?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -112,4 +133,9 @@ export class UserInfoDto {
   @IsOptional()
   @IsString()
   old?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  scholarStatus?: 'pending' | 'started' | 'ended' | 'rejected' | 'verify';
 }

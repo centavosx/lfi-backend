@@ -1,6 +1,38 @@
-export enum Level {
+export enum Education {
   SHS = 'SHS',
   COLLEGE = 'College',
+}
+
+export enum Level {
+  first1stSem = '1st year - 1st Sem',
+  first2ndSem = '1st year - 2nd Sem',
+  first3rdSem = '1st year - 3rd Sem',
+  firstSummer = '1st year - Summer',
+
+  second1stSem = '2nd year - 1st Sem',
+  second2ndSem = '2nd year - 2nd Sem',
+  second3rdSem = '2nd year - 3rd Sem',
+  secondSummer = '2nd year - Summer',
+
+  third1stSem = '3rd year - 1st Sem',
+  third2ndSem = '3rd year - 2nd Sem',
+  third3rdSem = '3rd year - 3rd Sem',
+  thirdSummer = '3rd year - Summer',
+
+  fourth1stSem = '4th year - 1st Sem',
+  fourth2ndSem = '4th year - 2nd Sem',
+  fourth3rdSem = '4th year - 3rd Sem',
+  fourthSummer = '4th year - Summer',
+
+  fifth1stSem = '5th year - 1st Sem',
+  fifth2ndSem = '5th year - 2nd Sem',
+  fifth3rdSem = '5th year - 3rd Sem',
+  fifthSummer = '5th year - Summer',
+
+  sixth1stSem = '6th year - 1st Sem',
+  sixth2ndSem = '6th year - 2nd Sem',
+  sixth3rdSem = '6th year - 3rd Sem',
+  sixthSummer = '6th year - Summer',
 }
 
 export enum ShsTrackAndStrandsEnum {
