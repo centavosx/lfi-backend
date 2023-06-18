@@ -15,7 +15,6 @@ export class DashboardService {
 
   //Run in non-concurrent since the current database only handles up to three connections
   public async getDashboard(timeZone: string, status: UserStatus) {
-    console.log(status);
     const upcomingEvents = await this.eventsRepository.find({
       where: [
         {

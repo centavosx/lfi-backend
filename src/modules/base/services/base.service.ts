@@ -214,8 +214,8 @@ export class BaseService {
       if (user.code === code) {
         user.status = UserStatus.VERIFIED;
         user.code = null;
-
-        const newU = await queryRunner.manager.save(user);
+        const userRepoTemp = queryRunner.manager.getRepository(User);
+        const newU = await userRepoTemp.save(user);
         const scholar = await this.scholarRepository.findOne({
           where: {
             user: {
@@ -226,11 +226,13 @@ export class BaseService {
         });
 
         scholar.status = 'pending';
-        await queryRunner.manager.save(scholar);
-        const tokens = await this.tokenService.generateTokens(newU);
+        const scholarRepoTemp = queryRunner.manager.getRepository(Scholar);
+        await scholarRepoTemp.save(scholar);
 
-        await this.tokenService.whitelistToken(tokens.refreshToken, user.id);
         await queryRunner.commitTransaction();
+
+        const tokens = await this.tokenService.generateTokens(newU);
+        await this.tokenService.whitelistToken(tokens.refreshToken, user.id);
         return tokens;
       }
     } catch (err) {

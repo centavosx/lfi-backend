@@ -43,7 +43,7 @@ export class EventsService {
             CASE 
               WHEN TO_CHAR(dates,'YYYY-MM-DD') = TO_CHAR(start_date,'YYYY-MM-DD')
               THEN dates
-              ELSE date_trunc('day', dates)
+              ELSE date_trunc('day', dates) AT TIME ZONE $3
             END as start_date, 
             id, name, description, color, end_date
             FROM (
@@ -53,7 +53,7 @@ export class EventsService {
             CASE 
               WHEN TO_CHAR(dates,'YYYY-MM-DD') = TO_CHAR(start_date,'YYYY-MM-DD')
               THEN dates
-              ELSE date_trunc('day', dates)
+              ELSE date_trunc('day', dates) AT TIME ZONE $3
             END BETWEEN $1 AND $2
           ) "event_gen"
 `,
@@ -79,7 +79,7 @@ export class EventsService {
             CASE 
               WHEN TO_CHAR(dates,'YYYY-MM-DD') = TO_CHAR(start_date,'YYYY-MM-DD')
               THEN dates
-              ELSE date_trunc('day', dates)
+              ELSE date_trunc('day', dates) AT TIME ZONE $3
             END as start_date, 
             id, name, description, color
             FROM (
@@ -89,7 +89,7 @@ export class EventsService {
             CASE 
               WHEN TO_CHAR(dates,'YYYY-MM-DD') = TO_CHAR(start_date,'YYYY-MM-DD')
               THEN dates
-              ELSE date_trunc('day', dates)
+              ELSE date_trunc('day', dates) AT TIME ZONE $3
             END BETWEEN $1 AND $2
           ) "event_gen"
       ) "ev_grouped"
