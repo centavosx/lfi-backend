@@ -113,4 +113,29 @@ export class EventsService {
       color: generateColor(),
     });
   }
+
+  public async patchEvent(id: string, data: CreateEventDto) {
+    const event = await this.eventRepository.findOne({
+      where: {
+        id,
+      },
+    });
+    if (!event) throw new NotFoundException();
+
+    Object.assign(event, data);
+
+    return await this.eventRepository.save(event);
+  }
+
+  public async deleteEvent(id: string) {
+    const event = await this.eventRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!event) throw new NotFoundException();
+
+    return await this.eventRepository.remove(event);
+  }
 }

@@ -95,4 +95,16 @@ export class AnnouncementsService {
 
     return await this.announcementRepository.save(announcement);
   }
+
+  public async deleteAnnouncement(id: string) {
+    const announcement = await this.announcementRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!announcement) throw new NotFoundException('Not found');
+
+    return await this.announcementRepository.remove(announcement);
+  }
 }
