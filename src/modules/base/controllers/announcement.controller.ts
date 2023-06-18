@@ -1,24 +1,11 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Query,
-  Body,
-  Headers,
-} from '@nestjs/common';
+import { Controller, Get, Post, Delete, Query, Body } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Param } from '@nestjs/common/decorators';
 import { Roles } from '../../../decorators/roles.decorator';
 import { PostAnnouncementDto, UpdateAnnouncementDto, SearchDto } from '../dto';
-import { BaseService } from '../services/base.service';
 import { Roles as RoleTypes } from '../../../enum';
 import { Parameter } from '../../../helpers';
-import { MailService } from '../../../mail/mail.service';
-import { Token, User } from '../../../decorators';
-import { User as Usertype } from '../../../entities';
-import { ForbiddenException } from '@nestjs/common/exceptions';
-import { UserInfoDto } from '../dto/update-user-info.dto';
+
 import { AnnouncementsService } from '../services';
 
 @ApiTags('announcements')
@@ -48,5 +35,11 @@ export class AnnouncementController {
   @Post()
   public async updateAnnouncement(@Body() data: UpdateAnnouncementDto) {
     return await this.announcementService.patchAnnouncemnt(data);
+  }
+
+  @Roles(RoleTypes.ADMIN_WRITE, RoleTypes.SUPER)
+  @Delete(Parameter.id())
+  public async deleteAnnouncement(@Param('id') id: string) {
+    return await this.announcementService.deleteAnnouncement(id);
   }
 }

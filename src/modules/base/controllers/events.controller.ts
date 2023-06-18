@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Query, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Body,
+  Delete,
+  Patch,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Param } from '@nestjs/common/decorators';
 import { Roles } from '../../../decorators/roles.decorator';
@@ -7,6 +15,7 @@ import { CreateEventDto, SortEventDto } from '../dto';
 import { Roles as RoleTypes } from '../../../enum';
 
 import { EventsService } from '../services';
+import { Parameter } from '../../../helpers';
 
 @ApiTags('events')
 @Controller('events')
@@ -26,8 +35,17 @@ export class EventsController {
 
   @Roles(RoleTypes.ADMIN_WRITE, RoleTypes.SUPER)
   @Post()
-  public async createUser(@Body() data: CreateEventDto) {
+  public async createEvent(@Body() data: CreateEventDto) {
     return await this.eventService.createEvent(data);
+  }
+
+  @Roles(RoleTypes.ADMIN_WRITE, RoleTypes.SUPER)
+  @Patch(Parameter.id())
+  public async updateEvemt(
+    @Param('id') id: string,
+    @Body() data: CreateEventDto,
+  ) {
+    return await this.eventService.patchEvent(id, data);
   }
 
   @Get('/all')
@@ -39,5 +57,11 @@ export class EventsController {
       new Date(startDate),
       new Date(endDate),
     );
+  }
+
+  @Roles(RoleTypes.ADMIN_WRITE, RoleTypes.SUPER)
+  @Delete(Parameter.id())
+  public async deleteEvent(@Param('id') id: string) {
+    return await this.eventService.deleteEvent(id);
   }
 }

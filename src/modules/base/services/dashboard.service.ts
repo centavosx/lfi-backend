@@ -15,7 +15,6 @@ export class DashboardService {
 
   //Run in non-concurrent since the current database only handles up to three connections
   public async getDashboard(timeZone: string, status: UserStatus) {
-    console.log(status);
     const upcomingEvents = await this.eventsRepository.find({
       where: [
         {
@@ -78,7 +77,7 @@ export class DashboardService {
             ELSE role_name
           END
 		UNION
-        SELECT DISTINCT REPLACE(REPLACE("scholar".status, 'pending', 'applicant'), 'active', 'scholar') as "name", COUNT("scholar".status) as "count" FROM "user"
+        SELECT DISTINCT REPLACE(REPLACE("scholar".status, 'pending', 'applicant'), 'started', 'scholar') as "name", COUNT("scholar".status) as "count" FROM "user"
           LEFT JOIN user_role ON user_role.user_id = "user".id 
           LEFT JOIN role "role" ON user_role.role_id = "role".id  
           LEFT JOIN scholar "scholar" ON  scholar.user_id = "user".id
