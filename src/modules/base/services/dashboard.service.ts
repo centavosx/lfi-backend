@@ -82,8 +82,7 @@ export class DashboardService {
           LEFT JOIN role "role" ON user_role.role_id = "role".id  
           LEFT JOIN scholar "scholar" ON  scholar.user_id = "user".id
             WHERE "role".name = 'user' AND "scholar".status = 'pending' OR "scholar".status='started'
-        GROUP BY  "scholar".status, "user".id
-        
+        GROUP BY "scholar".status
       `);
 
     return {

@@ -299,17 +299,12 @@ export class BaseService {
       const isAdmin = roles.every((v) => v.name !== Roles.USER);
 
       const pw =
-        !isVerification &&
-        (isAdmin || (!!uData && data.status === UserStatus.ACTIVE))
+        (!isVerification &&
+          (isAdmin || (!!uData && data.status === UserStatus.ACTIVE))) ||
+        isVerification
           ? Math.random().toString(36).slice(2) +
             Math.random().toString(36).toUpperCase().slice(2)
           : undefined;
-
-      newUser.address = data.address;
-      (newUser.code = isVerification
-        ? Math.random().toString(36).slice(2).toLowerCase()
-        : undefined),
-        (newUser.email = data.email);
 
       const obj = {};
 
@@ -324,6 +319,7 @@ export class BaseService {
       Object.assign(newUser, {
         id: data.id,
         ...obj,
+        status: isVerification ? UserStatus.PENDING : (obj as any).status,
         password: !!pw ? await hashPassword(pw) : undefined,
         ...(!!uData
           ? {
@@ -331,10 +327,15 @@ export class BaseService {
             }
           : {}),
       });
+      newUser.address = data.address;
+      newUser.code = isVerification
+        ? Math.random().toString(36).slice(2).toLowerCase()
+        : undefined;
+      newUser.email = data.email;
 
       user = newUser;
 
-      const checkAndAddUser = !!user.id
+      let checkAndAddUser = !!user.id
         ? await this.userRepository.findOne({
             where: {
               id: user.id,
@@ -342,6 +343,10 @@ export class BaseService {
             relations: ['roles'],
           })
         : user;
+
+      if (!!user.id) {
+        checkAndAddUser = { ...checkAndAddUser, ...(user as any) };
+      }
 
       if (checkAndAddUser.id) {
         await queryRunner.manager.query(
@@ -405,16 +410,21 @@ export class BaseService {
 
         await newUserFb.setData({
           id: tempoUser.id,
-          name: user.lname + ', ' + user.fname + ' ' + user.mname,
+          name:
+            tempoUser.lname +
+            ', ' +
+            tempoUser.fname +
+            ' ' +
+            (tempoUser.mname || ''),
           picture,
         });
 
         await this.mailService.sendMail(
-          user.email,
+          tempoUser.email,
           'Please verify your account',
           'verification',
           {
-            code: user.code,
+            code: tempoUser.code,
           },
         );
       } else if (!!uData && data.status === UserStatus.ACTIVE && !isAdmin) {
@@ -423,12 +433,17 @@ export class BaseService {
 
         await newUserFb.setData({
           id: tempoUser.id,
-          name: user.lname + ', ' + user.fname + ' ' + user.mname,
+          name:
+            tempoUser.lname +
+            ', ' +
+            tempoUser.fname +
+            ' ' +
+            (tempoUser.mname || ''),
           picture,
         });
 
         await this.mailService.sendMail(
-          user.email,
+          tempoUser.email,
           'You have been accepted',
           'acceptance-scholar',
           {
@@ -456,8 +471,8 @@ export class BaseService {
 
       await queryRunner.commitTransaction();
     } catch (err) {
-      console.log(err);
       await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
       await queryRunner.release();
     }
@@ -627,6 +642,18 @@ export class BaseService {
     if (userToUpdate.length > 0) await this.userRepository.save(userToUpdate);
     if (userToDelete.length > 0) {
       await this.tokenService.unlistUserIds(userToDelete);
+      await this.fileRepository
+        .createQueryBuilder('user_files')
+        .leftJoin('user_files.user', 'user')
+        .where(`user.id IN (:...ids)`, { ids: userToDelete })
+        .delete()
+        .execute();
+      await this.scholarRepository
+        .createQueryBuilder('scholar')
+        .leftJoin('scholar.user', 'user')
+        .where(`user.id IN (:...ids)`, { ids: userToDelete })
+        .delete()
+        .execute();
       await this.userRepository.delete(userToDelete);
     }
 
@@ -803,7 +830,7 @@ export class BaseService {
 
       await newUserFb.setData({
         id: userData.id,
-        name: user.lname + ', ' + user.fname + ' ' + user.mname,
+        name: user.lname + ', ' + user.fname + ' ' + (user.mname || ''),
         picture,
       });
 
@@ -853,8 +880,8 @@ export class BaseService {
       }
       await queryRunner.commitTransaction();
     } catch (err) {
-      console.log(err);
       await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
       await queryRunner.release();
     }
