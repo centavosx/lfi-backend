@@ -60,7 +60,7 @@ export class EventsService {
 
     return await this.eventRepository.query(
       `
-      SELECT id, name, description, color, start_date, DATE_PART('day', start_date) as "day" FROM  (
+      SELECT id, name, description, color, start_date, DATE_PART('day', start_date AT TIME ZONE $3) as "day" FROM  (
         SELECT id, name, description, color, start_date,
         ROW_NUMBER() over (partition by start_date order by start_date ASC) as rank
         FROM 
