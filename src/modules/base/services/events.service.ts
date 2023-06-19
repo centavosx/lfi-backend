@@ -1,19 +1,8 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Announcements, Events, Role, User } from '../../../entities';
 import { DataSource, Repository, Raw, In } from 'typeorm';
-import {
-  addHours,
-  addMonths,
-  endOfMonth,
-  format,
-  startOfMonth,
-} from 'date-fns';
+import { format } from 'date-fns';
 import { CreateEventDto } from '../dto';
 
 import { MailService } from '../../../mail/mail.service';
