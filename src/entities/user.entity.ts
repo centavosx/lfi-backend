@@ -87,6 +87,12 @@ export class User {
   @DeleteDateColumn()
   deleted?: Date | null;
 
+  @Column({ name: 'shs_graduate', nullable: true, default: null })
+  shsGraduated?: Date | null;
+
+  @Column({ name: 'college_graduate', nullable: true, default: null })
+  collegeGraduated?: Date | null;
+
   isExistingScholar: boolean;
 
   @AfterLoad()

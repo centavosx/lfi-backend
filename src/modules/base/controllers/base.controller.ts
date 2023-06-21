@@ -8,7 +8,7 @@ import {
   Headers,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Param, Put } from '@nestjs/common/decorators';
+import { Param } from '@nestjs/common/decorators';
 import { Roles } from '../../../decorators/roles.decorator';
 import {
   CodeDto,
@@ -19,7 +19,6 @@ import {
   LoginDto,
   RenewalDto,
   ResetTokenDto,
-  ScholarDto,
   SearchSingle,
   SearchUserDto,
   SubmitEnrolmentBillDto,

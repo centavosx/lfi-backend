@@ -14,7 +14,20 @@ export class DashboardService {
   ) {}
 
   //Run in non-concurrent since the current database only handles up to three connections
-  public async getDashboard(timeZone: string, status: UserStatus) {
+  public async getDashboard(
+    timeZone: string,
+    status: UserStatus,
+    isCollege?: boolean,
+  ) {
+    const college =
+      isCollege !== undefined
+        ? `AND ${
+            isCollege
+              ? '"user".college_graduate IS NOT NULL'
+              : '"user".shs_graduate IS NOT NULL'
+          }`
+        : '';
+
     const upcomingEvents = await this.eventsRepository.find({
       where: [
         {
@@ -27,13 +40,14 @@ export class DashboardService {
         startDate: 'ASC',
       },
     });
+
     const graphValues = await this.userRepository.query(
       `SELECT TO_CHAR(timezone($1, "user".created),'YYYY') AS "x", count(TO_CHAR(timezone($1, "user".created), 'YYYY')) AS "y" FROM "user"
             LEFT JOIN user_role ON user_role.user_id = "user".id 
             LEFT JOIN role "role" ON user_role.role_id = "role".id  
             LEFT JOIN scholar "scholar" ON  scholar.user_id = "user".id
               WHERE "user".status = $2
-              AND "role".name = 'user' 
+              AND "role".name = 'user' ${college}
           GROUP BY TO_CHAR(timezone($1, "user".created),'YYYY')`,
       [timeZone, status],
     );
@@ -77,11 +91,11 @@ export class DashboardService {
             ELSE role_name
           END
 		UNION
-        SELECT DISTINCT REPLACE(REPLACE("scholar".status, 'pending', 'applicant'), 'started', 'scholar') as "name", COUNT("scholar".status) as "count" FROM "user"
+        SELECT DISTINCT REPLACE(REPLACE("scholar".status, 'ended', 'scholar'), 'started', 'scholar') as "name", COUNT("scholar".status) as "count" FROM "user"
           LEFT JOIN user_role ON user_role.user_id = "user".id 
           LEFT JOIN role "role" ON user_role.role_id = "role".id  
-          LEFT JOIN scholar "scholar" ON  scholar.user_id = "user".id
-            WHERE "role".name = 'user' AND "scholar".status = 'pending' OR "scholar".status='started'
+          LEFT JOIN scholar "scholar" ON  scholar.user_id = "user".id 
+            WHERE "user".status = 'active' AND "role".name = 'user' AND ("scholar".status='started' OR "scholar".status='ended')
         GROUP BY "scholar".status
       `);
 
