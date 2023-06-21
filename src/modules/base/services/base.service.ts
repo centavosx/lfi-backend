@@ -844,7 +844,8 @@ export class BaseService {
 
       await newUserFb.setData({
         id: userData.id,
-        name: user.lname + ', ' + user.fname + ' ' + (user.mname || ''),
+        name:
+          userData.lname + ', ' + userData.fname + ' ' + (userData.mname || ''),
         picture,
       });
 
