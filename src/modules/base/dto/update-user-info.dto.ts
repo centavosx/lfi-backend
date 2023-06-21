@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -133,6 +134,16 @@ export class UserInfoDto {
   @IsOptional()
   @IsString()
   old?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isShsGraduate?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isCollegeGraduate?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

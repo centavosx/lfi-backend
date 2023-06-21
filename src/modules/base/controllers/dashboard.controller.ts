@@ -14,7 +14,14 @@ export class DashboardController {
 
   @Roles(RoleTypes.SUPER, RoleTypes.ADMIN_READ)
   @Get()
-  public async getAll(@Query() { timeZone, status }: DashboardDto) {
-    return await this.dashboardService.getDashboard(timeZone, status);
+  public async getAll(@Query() { timeZone, status, isCollege }: DashboardDto) {
+    const isCollegeConverted =
+      isCollege !== undefined ? isCollege === 'true' : undefined;
+
+    return await this.dashboardService.getDashboard(
+      timeZone,
+      status,
+      isCollegeConverted,
+    );
   }
 }

@@ -299,9 +299,8 @@ export class BaseService {
       const isAdmin = roles.every((v) => v.name !== Roles.USER);
 
       const pw =
-        (!isVerification &&
-          (isAdmin || (!!uData && data.status === UserStatus.ACTIVE))) ||
-        isVerification
+        !isVerification &&
+        (isAdmin || (!!uData && data.status === UserStatus.ACTIVE))
           ? Math.random().toString(36).slice(2) +
             Math.random().toString(36).toUpperCase().slice(2)
           : undefined;
@@ -757,11 +756,24 @@ export class BaseService {
 
       Object.assign(userData, {
         ...obj,
+
         ...(isExpelled ? { deleted: new Date() } : { deleted: null }),
         ...(!!pw && userData.password === null
           ? { password: await hashPassword(pw) }
           : {}),
       });
+
+      userData.shsGraduated = !!rest.isShsGraduate
+        ? new Date()
+        : rest.isShsGraduate !== undefined
+        ? null
+        : userData.shsGraduated;
+
+      userData.collegeGraduated = !!rest.isCollegeGraduate
+        ? new Date()
+        : rest.isCollegeGraduate !== undefined
+        ? null
+        : userData.collegeGraduated;
 
       if (!!old && !(await ifMatched(old, userData.password)))
         throw new BadRequestException('Wrong old password');
@@ -799,6 +811,8 @@ export class BaseService {
             ? rest.scholarStatus
             : scholar.status;
 
+        scholar.ended = scholar.status === 'ended' ? new Date() : null;
+
         const obj3 = {};
 
         Object.keys(scholar).forEach((v) => {
@@ -834,7 +848,7 @@ export class BaseService {
         picture,
       });
 
-      if (isAccepted) {
+      if (!!isUser && (isAccepted || rest.scholarStatus === 'started')) {
         if (isExisted) {
           await this.mailService.sendMail(
             userData.email,
