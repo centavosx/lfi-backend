@@ -16,7 +16,9 @@ export class DashboardController {
   @Get()
   public async getAll(@Query() { timeZone, status, isCollege }: DashboardDto) {
     const isCollegeConverted =
-      isCollege !== undefined ? isCollege === 'true' : undefined;
+      isCollege !== undefined && isCollege !== ''
+        ? isCollege === 'true'
+        : undefined;
 
     return await this.dashboardService.getDashboard(
       timeZone,
