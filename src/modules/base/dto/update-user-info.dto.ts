@@ -98,6 +98,11 @@ export class UserInfoDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  homeVisitProof: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   birthCert?: string;
 
   @ApiPropertyOptional()
