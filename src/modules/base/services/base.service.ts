@@ -592,8 +592,6 @@ export class BaseService {
     )
       throw new NotFoundException('User not found');
 
-    console.log(data.password, user.password);
-
     if (!(await ifMatched(data.password, user.password)))
       throw new BadRequestException('Wrong password');
 
