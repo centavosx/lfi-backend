@@ -77,6 +77,11 @@ export class UserInformationDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  homeVisitProof: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   birthCert: string;
 
   @ApiProperty()
@@ -193,6 +198,11 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   homeSketch: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  homeVisitProof: string;
 
   @ApiPropertyOptional()
   @IsOptional()

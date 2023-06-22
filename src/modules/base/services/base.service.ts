@@ -77,6 +77,8 @@ export class BaseService {
         return FileTypes.WIFI_BILL;
       case 'enrollmentBill':
         return FileTypes.ENROLLMENT_BILL;
+      case 'homeVisitProof':
+        return FileTypes.HOME_VISIT_PROOF;
       default:
         return undefined;
     }
@@ -728,7 +730,11 @@ export class BaseService {
 
     try {
       const isUser = userData.roles.some((v) => v.name === Roles.USER);
-      if (!isUser && !user.roles.some((v) => v.name === Roles.SUPER))
+      if (
+        !isUser &&
+        !user.roles.some((v) => v.name === Roles.SUPER) &&
+        userData.id !== user.id
+      )
         throw new ForbiddenException('Not allowed');
 
       const isAccepted =
