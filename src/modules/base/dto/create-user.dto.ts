@@ -199,11 +199,6 @@ export class CreateUserDto {
   @IsNotEmpty()
   homeSketch: string;
 
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  homeVisitProof: string;
-
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
