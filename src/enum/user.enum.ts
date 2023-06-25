@@ -4,6 +4,14 @@ export enum Education {
 }
 
 export enum Level {
+  shs111stSem = 'Grade 11 - 1st Sem',
+  shs112ndSem = 'Grade 11 - 2nd Sem',
+  shs11Summer = 'Grade 11 - Summer',
+
+  shs121stSem = 'Grade 12 - 1st Sem',
+  shs122ndtSem = 'Grade 12 - 2nd Sem',
+  shs12Summer = 'Grade 12 - Summer',
+
   first1stSem = '1st year - 1st Sem',
   first2ndSem = '1st year - 2nd Sem',
   first3rdSem = '1st year - 3rd Sem',
