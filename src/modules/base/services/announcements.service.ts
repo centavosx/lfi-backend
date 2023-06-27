@@ -12,11 +12,18 @@ import {
 
 import { NotFoundException } from '@nestjs/common/exceptions';
 
-import { RealTimeNotifications } from '../../../firebaseapp';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class AnnouncementsService {
   constructor(
+    @InjectQueue('notifQueue')
+    private readonly notifQueue: Queue<{
+      data: any;
+      id: string;
+      isNotif: boolean;
+    }>,
     @InjectRepository(Announcements)
     private readonly announcementRepository: Repository<Announcements>,
   ) {}
@@ -68,11 +75,15 @@ export class AnnouncementsService {
   }
 
   public async postAnnouncement(data: PostAnnouncementDto) {
-    const notif = new RealTimeNotifications('all');
-    await notif.sendData({
-      title: 'Announcement - ' + data.title,
-      description: data.description,
+    this.notifQueue.add({
+      data: {
+        title: 'Announcement - ' + data.title,
+        description: data.description,
+      },
+      id: 'all',
+      isNotif: true,
     });
+
     return await this.announcementRepository.save({
       ...new Announcements(),
       ...data,

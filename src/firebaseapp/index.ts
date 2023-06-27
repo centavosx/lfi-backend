@@ -101,3 +101,5 @@ export class RealTimeNotifications<
     }
   }
 }
+
+export * from './firebase.processor';

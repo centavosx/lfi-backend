@@ -27,6 +27,7 @@ import {
   RoleService,
 } from './services';
 import { BullModule } from '@nestjs/bull';
+import { FirebaseQueueProcessor } from '../../firebaseapp';
 
 @Module({
   imports: [
@@ -41,6 +42,9 @@ import { BullModule } from '@nestjs/bull';
     ]),
     BullModule.registerQueue({
       name: 'emailQueue',
+    }),
+    BullModule.registerQueue({
+      name: 'notifQueue',
     }),
   ],
   controllers: [
@@ -59,6 +63,7 @@ import { BullModule } from '@nestjs/bull';
     AnnouncementsService,
     DashboardService,
     MailProcessor,
+    FirebaseQueueProcessor,
   ],
   exports: [
     TypeOrmModule.forFeature([
@@ -72,6 +77,9 @@ import { BullModule } from '@nestjs/bull';
     ]),
     BullModule.registerQueue({
       name: 'emailQueue',
+    }),
+    BullModule.registerQueue({
+      name: 'notifQueue',
     }),
   ],
 })
