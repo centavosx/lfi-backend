@@ -97,6 +97,17 @@ export class DashboardService {
           LEFT JOIN scholar "scholar" ON  scholar.user_id = "user".id 
             WHERE "user".status = 'active' AND "role".name = 'user' AND ("scholar".status='started' OR "scholar".status='ended')
         GROUP BY "scholar".status
+    UNION
+        SELECT 'applicant' as "name", COUNT("user".id) as "count" FROM "user"           
+          LEFT JOIN user_role ON user_role.user_id = "user".id 
+          LEFT JOIN role "role" ON user_role.role_id = "role".id   
+          WHERE "user".status = 'verified' AND "role".name = 'user'
+    UNION 
+        SELECT 'shsGraduate' as "name", COUNT("user".id) as "count" FROM "user" WHERE "user".shs_graduate IS NOT NULL
+    UNION 
+        SELECT 'collegeGraduate' as "name", COUNT("user".id) as "count" FROM "user" WHERE "user".college_graduate IS NOT NULL
+    UNION
+        SELECT 'expelled' as "name", COUNT("user".id) as "count" FROM "user" WHERE "user".status='expelled'
       `);
 
     return {
