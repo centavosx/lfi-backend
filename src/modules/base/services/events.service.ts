@@ -1,19 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Announcements, Events, Role, User } from '../../../entities';
-import { DataSource, Repository, Raw, In } from 'typeorm';
+import { Events, User } from '../../../entities';
+import { DataSource, Repository } from 'typeorm';
 import { format } from 'date-fns';
 import { CreateEventDto } from '../dto';
 
 import { MailService } from '../../../mail/mail.service';
 
 import { generateColor } from '../../../helpers';
-import { RealTimeNotifications } from '../../../firebaseapp';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class EventsService {
   constructor(
     private readonly dataSource: DataSource,
+    @InjectQueue('notifQueue')
+    private readonly notifQueue: Queue<{
+      data: any;
+      id: string;
+      isNotif: boolean;
+    }>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Events)
     private readonly eventRepository: Repository<Events>,
@@ -89,11 +96,15 @@ export class EventsService {
   }
 
   public async createEvent(data: CreateEventDto) {
-    const notif = new RealTimeNotifications('all');
-    await notif.sendData({
-      title: 'Event - ' + data.name,
-      description: data.description,
+    this.notifQueue.add({
+      data: {
+        title: 'Event - ' + data.name,
+        description: data.description,
+      },
+      id: 'all',
+      isNotif: true,
     });
+
     return await this.eventRepository.save({
       ...new Events(),
       ...data,

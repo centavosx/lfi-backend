@@ -32,12 +32,19 @@ import {
   UnauthorizedException,
 } from '@nestjs/common/exceptions';
 import { UserInfoDto } from '../dto/update-user-info.dto';
-import { NewUser, RealTimeNotifications } from '../../../firebaseapp';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class BaseService {
   constructor(
     private readonly dataSource: DataSource,
+    @InjectQueue('notifQueue')
+    private readonly notifQueue: Queue<{
+      data: any;
+      id: string;
+      isNotif: boolean;
+    }>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
@@ -407,17 +414,19 @@ export class BaseService {
       }
 
       if (isVerification) {
-        const newUserFb = new NewUser(tempoUser.id);
-
-        await newUserFb.setData({
+        this.notifQueue.add({
+          data: {
+            id: tempoUser.id,
+            name:
+              tempoUser.lname +
+              ', ' +
+              tempoUser.fname +
+              ' ' +
+              (tempoUser.mname || ''),
+            picture,
+          },
           id: tempoUser.id,
-          name:
-            tempoUser.lname +
-            ', ' +
-            tempoUser.fname +
-            ' ' +
-            (tempoUser.mname || ''),
-          picture,
+          isNotif: false,
         });
 
         this.mailService.sendMail(
@@ -430,17 +439,19 @@ export class BaseService {
         );
       } else if (!!uData && data.status === UserStatus.ACTIVE && !isAdmin) {
         //new user
-        const newUserFb = new NewUser(tempoUser.id);
-
-        await newUserFb.setData({
+        this.notifQueue.add({
+          data: {
+            id: tempoUser.id,
+            name:
+              tempoUser.lname +
+              ', ' +
+              tempoUser.fname +
+              ' ' +
+              (tempoUser.mname || ''),
+            picture,
+          },
           id: tempoUser.id,
-          name:
-            tempoUser.lname +
-            ', ' +
-            tempoUser.fname +
-            ' ' +
-            (tempoUser.mname || ''),
-          picture,
+          isNotif: false,
         });
 
         this.mailService.sendMail(
@@ -452,11 +463,15 @@ export class BaseService {
             password: pw,
           },
         );
-        const notif = new RealTimeNotifications(user.id);
-        await notif.sendData({
-          title: 'Congratulations!',
-          description:
-            'You have been accepted to our scholarship program, please check your email for more details',
+
+        this.notifQueue.add({
+          data: {
+            title: 'Congratulations!',
+            description:
+              'You have been accepted to our scholarship program, please check your email for more details',
+          },
+          id: tempoUser.id,
+          isNotif: true,
         });
       } else {
         this.mailService.sendMail(
@@ -844,15 +859,19 @@ export class BaseService {
         await scholarRepo.save(scholar);
       }
 
-      const notif = new RealTimeNotifications(userData.id);
-
-      const newUserFb = new NewUser(userData.id);
-
-      await newUserFb.setData({
+      this.notifQueue.add({
+        data: {
+          id: userData.id,
+          name:
+            userData.lname +
+            ', ' +
+            userData.fname +
+            ' ' +
+            (userData.mname || ''),
+          picture,
+        },
         id: userData.id,
-        name:
-          userData.lname + ', ' + userData.fname + ' ' + (userData.mname || ''),
-        picture,
+        isNotif: false,
       });
 
       if (!!isUser && (isAccepted || rest.scholarStatus === 'started')) {
@@ -877,11 +896,14 @@ export class BaseService {
             },
           );
         }
-
-        await notif.sendData({
-          title: 'Congratulations!',
-          description:
-            'You have been accepted to our scholarship program, please check your email for more details',
+        this.notifQueue.add({
+          data: {
+            title: 'Congratulations!',
+            description:
+              'You have been accepted to our scholarship program, please check your email for more details',
+          },
+          id: userData.id,
+          isNotif: true,
         });
       }
 
@@ -892,11 +914,14 @@ export class BaseService {
           'expelled',
           {},
         );
-
-        await notif.sendData({
-          title: 'You have been expelled',
-          description:
-            "I'm sorry to say this but we decided to expell you due to the requirement has not been met or you have any violations.",
+        this.notifQueue.add({
+          data: {
+            title: 'You have been expelled',
+            description:
+              "I'm sorry to say this but we decided to expell you due to the requirement has not been met or you have any violations.",
+          },
+          id: userData.id,
+          isNotif: true,
         });
       }
       await queryRunner.commitTransaction();
@@ -918,12 +943,15 @@ export class BaseService {
     newScholar.status = 'pending';
     Object.assign(newScholar, { ...data, user });
     await this.scholarRepository.save(newScholar);
-    const notif = new RealTimeNotifications(id);
 
-    await notif.sendData({
-      title: 'You have submitted a renewal',
-      description:
-        "Please wait for our admin to process your application. (Remember: Submit enrollment bill or you can't proceed to the next application)",
+    this.notifQueue.add({
+      data: {
+        title: 'You have submitted a renewal',
+        description:
+          "Please wait for our admin to process your application. (Remember: Submit enrollment bill or you can't proceed to the next application)",
+      },
+      id: id,
+      isNotif: true,
     });
 
     return;
@@ -945,11 +973,14 @@ export class BaseService {
     if (!user) throw new NotFoundException();
     user.enrollmentBill = data.enrollmentBill;
     await this.scholarRepository.save(user);
-    const notif = new RealTimeNotifications(id);
 
-    await notif.sendData({
-      title: 'Enrollment Bill Submitted',
-      description: 'Thank you for submitting you enrollmentBill!',
+    this.notifQueue.add({
+      data: {
+        title: 'Enrollment Bill Submitted',
+        description: 'Thank you for submitting you enrollmentBill!',
+      },
+      id: id,
+      isNotif: true,
     });
 
     return;
