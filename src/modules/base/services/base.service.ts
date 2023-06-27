@@ -250,7 +250,7 @@ export class BaseService {
     user.code = Math.random().toString(36).slice(2).toLowerCase();
     const newUser = await this.userRepository.save(user);
 
-    await this.mailService.sendMail(
+    this.mailService.sendMail(
       newUser.email,
       'Please verify your account',
       'verification',
@@ -420,7 +420,7 @@ export class BaseService {
           picture,
         });
 
-        await this.mailService.sendMail(
+        this.mailService.sendMail(
           tempoUser.email,
           'Please verify your account',
           'verification',
@@ -443,7 +443,7 @@ export class BaseService {
           picture,
         });
 
-        await this.mailService.sendMail(
+        this.mailService.sendMail(
           tempoUser.email,
           'You have been accepted',
           'acceptance-scholar',
@@ -459,7 +459,7 @@ export class BaseService {
             'You have been accepted to our scholarship program, please check your email for more details',
         });
       } else {
-        await this.mailService.sendMail(
+        this.mailService.sendMail(
           user.email,
           'Your admin account',
           'acceptance-admin',
@@ -667,7 +667,7 @@ export class BaseService {
 
     const token = await this.tokenService.generateResetToken(user);
     await this.tokenService.whitelistToken(token, user.id);
-    await this.mailService.sendMail(
+    this.mailService.sendMail(
       user.email,
       'Forgot password',
       'forgot-password',
@@ -857,7 +857,7 @@ export class BaseService {
 
       if (!!isUser && (isAccepted || rest.scholarStatus === 'started')) {
         if (isExisted) {
-          await this.mailService.sendMail(
+          this.mailService.sendMail(
             userData.email,
             'You have been accepted',
             'acceptance-existing',
@@ -867,7 +867,7 @@ export class BaseService {
             },
           );
         } else {
-          await this.mailService.sendMail(
+          this.mailService.sendMail(
             userData.email,
             'You have been accepted',
             'acceptance-scholar',
@@ -886,7 +886,7 @@ export class BaseService {
       }
 
       if (isExpelled) {
-        await this.mailService.sendMail(
+        this.mailService.sendMail(
           userData.email,
           'You have been expelled',
           'expelled',
