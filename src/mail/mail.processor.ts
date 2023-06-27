@@ -4,7 +4,13 @@ import * as handlebars from 'handlebars';
 import * as path from 'path';
 import * as fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
-import { Processor, OnQueueActive } from '@nestjs/bull';
+import {
+  Processor,
+  Process,
+  OnQueueFailed,
+  OnQueueActive,
+  OnQueueCompleted,
+} from '@nestjs/bull';
 import { Job } from 'bull';
 
 @Processor('emailQueue')
@@ -27,8 +33,47 @@ export class MailProcessor {
     } catch {}
   }
 
+  @OnQueueFailed()
+  handler(
+    job: Job<{
+      email: string;
+      subject: string;
+      template: string;
+      context: any;
+    }>,
+    error: Error,
+  ) {
+    console.log('Error=' + job.data.email);
+  }
+
   @OnQueueActive()
-  public async onActive(
+  onActive(
+    job: Job<{
+      email: string;
+      subject: string;
+      template: string;
+      context: any;
+    }>,
+  ) {
+    console.log(
+      `Processing job ${job.id} of type ${job.name} with data ${job.data.email}...`,
+    );
+  }
+
+  @OnQueueCompleted()
+  onCompleted(
+    job: Job<{
+      email: string;
+      subject: string;
+      template: string;
+      context: any;
+    }>,
+  ) {
+    console.log(`Data ${job.data.email} is completed`);
+  }
+
+  @Process()
+  public async onProcess(
     job: Job<{
       email: string;
       subject: string;
