@@ -19,15 +19,24 @@ import { RolesGuard } from './guards/roles.guard';
 import { MailService } from './mail/mail.service';
 import { RefreshController } from './authentication/controller/refresh.controller';
 import { dataSourceOptions } from './config/config';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
+  controllers: [RefreshController],
   imports: [
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot(dataSourceOptions),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST,
+        port: 13634,
+        password: process.env.REDIS_PASS,
+      },
+    }),
     BaseModule,
   ],
-  controllers: [RefreshController],
-  providers: [ConfigService, TokenService, RolesGuard, MailService],
+  providers: [ConfigService, TokenService, RolesGuard],
+  exports: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

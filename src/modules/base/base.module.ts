@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TokenService } from '../../authentication/services/token.service';
 import { MailService } from '../../mail/mail.service';
+import { MailProcessor } from '../../mail/mail.processor';
 import {
   Role,
   User,
@@ -25,6 +26,7 @@ import {
   EventsService,
   RoleService,
 } from './services';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -37,6 +39,9 @@ import {
       UserFiles,
       Scholar,
     ]),
+    BullModule.registerQueue({
+      name: 'emailQueue',
+    }),
   ],
   controllers: [
     BaseController,
@@ -53,6 +58,7 @@ import {
     EventsService,
     AnnouncementsService,
     DashboardService,
+    MailProcessor,
   ],
   exports: [
     TypeOrmModule.forFeature([
@@ -64,6 +70,9 @@ import {
       UserFiles,
       Scholar,
     ]),
+    BullModule.registerQueue({
+      name: 'emailQueue',
+    }),
   ],
 })
 export class BaseModule {}
