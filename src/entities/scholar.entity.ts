@@ -27,7 +27,7 @@ export class Scholar {
   status: 'pending' | 'started' | 'ended' | 'rejected' | 'verify' = 'verify';
 
   @Column({ nullable: false, default: false })
-  paid: boolean = null;
+  paid: boolean;
 
   @ManyToOne(() => User, (user) => user.scholar)
   @JoinColumn({ name: 'user_id' })
