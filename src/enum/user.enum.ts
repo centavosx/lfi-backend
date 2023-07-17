@@ -62,6 +62,7 @@ export enum UserStatus {
   PENDING = 'pending',
   CANCELED = 'cancelled',
   VERIFIED = 'verified',
+  PROCESSING = 'processing',
 }
 
 export enum CollegeEnum {
