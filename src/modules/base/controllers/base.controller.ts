@@ -221,4 +221,13 @@ export class BaseController {
       throw new ForbiddenException('Not allowed');
     return await this.baseService.submitEnrollmentBill(userId, data);
   }
+
+  @Roles(RoleTypes.SUPER, RoleTypes.ADMIN_WRITE)
+  @Patch('updatePaid/' + Parameter.id())
+  public async updatePaid(
+    @Param('id')
+    id: string,
+  ) {
+    return await this.baseService.updatePaid(id);
+  }
 }

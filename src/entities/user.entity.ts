@@ -37,6 +37,9 @@ export class User {
   @Column({ nullable: false, default: UserStatus.PENDING })
   status: UserStatus = UserStatus.PENDING;
 
+  @Column({ nullable: true })
+  reason: string;
+
   @Exclude()
   @Column({ nullable: true })
   password?: string | null = null;

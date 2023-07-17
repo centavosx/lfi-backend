@@ -757,6 +757,16 @@ export class BaseService {
         userData.status !== UserStatus.ACTIVE &&
         isUser;
 
+      const isRejected =
+        rest.status === UserStatus.CANCELED &&
+        userData.status !== UserStatus.CANCELED &&
+        isUser;
+
+      const isProcess =
+        rest.status === UserStatus.PROCESSING &&
+        userData.status !== UserStatus.PROCESSING &&
+        isUser;
+
       const isExpelled =
         rest.status === UserStatus.EXPELLED &&
         userData.status !== UserStatus.EXPELLED &&
@@ -912,7 +922,9 @@ export class BaseService {
           userData.email,
           'You have been expelled',
           'expelled',
-          {},
+          {
+            reason: userData.reason,
+          },
         );
         this.notifQueue.add({
           data: {
@@ -924,6 +936,45 @@ export class BaseService {
           isNotif: true,
         });
       }
+
+      if (isProcess) {
+        this.mailService.sendMail(
+          userData.email,
+          'Your application is now processing',
+          'process-scholar',
+          {},
+        );
+        this.notifQueue.add({
+          data: {
+            title: 'Your application is now processing',
+            description:
+              "We are now processing your application, we'll notify you once the process is now complete.",
+          },
+          id: userData.id,
+          isNotif: true,
+        });
+      }
+
+      if (isRejected) {
+        this.mailService.sendMail(
+          userData.email,
+          'Your application is rejected',
+          'rejected-scholar',
+          {
+            reason: userData.reason,
+          },
+        );
+        this.notifQueue.add({
+          data: {
+            title: 'Your application is rejected',
+            description:
+              'We are sorry to tell you that you have been rejected from your scholarship application',
+          },
+          id: userData.id,
+          isNotif: true,
+        });
+      }
+
       await queryRunner.commitTransaction();
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -982,6 +1033,34 @@ export class BaseService {
       id: id,
       isNotif: true,
     });
+
+    return;
+  }
+
+  public async updatePaid(id: string) {
+    const scholar = await this.scholarRepository.findOne({
+      where: {
+        id,
+      },
+      withDeleted: true,
+      relations: ['user'],
+    });
+
+    if (!scholar) throw new NotFoundException();
+
+    scholar.paid = !scholar.paid;
+
+    await this.scholarRepository.save(scholar);
+
+    if (!!scholar?.user.id)
+      this.notifQueue.add({
+        data: {
+          title: 'Enrollment has been paid',
+          description: 'Hi user, your enrollment has been paid',
+        },
+        id: scholar.user.id,
+        isNotif: true,
+      });
 
     return;
   }
