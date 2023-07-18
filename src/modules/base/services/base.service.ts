@@ -1037,7 +1037,7 @@ export class BaseService {
     return;
   }
 
-  public async updatePaid(id: string) {
+  public async updatePaid(id: string, link?: string) {
     const scholar = await this.scholarRepository.findOne({
       where: {
         id,
@@ -1049,6 +1049,7 @@ export class BaseService {
     if (!scholar) throw new NotFoundException();
 
     scholar.paid = !scholar.paid;
+    scholar.receipt = link;
 
     await this.scholarRepository.save(scholar);
 
