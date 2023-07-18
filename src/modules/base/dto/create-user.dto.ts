@@ -378,3 +378,10 @@ export class SubmitEnrolmentBillDto {
   @IsNotEmpty()
   enrollmentBill: string;
 }
+
+export class PaidDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  link?: string;
+}

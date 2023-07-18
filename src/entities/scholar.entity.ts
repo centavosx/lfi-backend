@@ -29,6 +29,9 @@ export class Scholar {
   @Column({ nullable: false, default: false })
   paid: boolean;
 
+  @Column({ nullable: true })
+  receipt: string = null;
+
   @ManyToOne(() => User, (user) => user.scholar)
   @JoinColumn({ name: 'user_id' })
   user: User;

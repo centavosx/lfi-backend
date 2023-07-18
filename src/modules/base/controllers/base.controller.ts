@@ -17,6 +17,7 @@ import {
   DeleteDto,
   ForgotPassDto,
   LoginDto,
+  PaidDto,
   RenewalDto,
   ResetTokenDto,
   SearchSingle,
@@ -227,7 +228,8 @@ export class BaseController {
   public async updatePaid(
     @Param('id')
     id: string,
+    @Body() { link }: PaidDto,
   ) {
-    return await this.baseService.updatePaid(id);
+    return await this.baseService.updatePaid(id, link);
   }
 }
