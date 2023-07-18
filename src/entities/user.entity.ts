@@ -31,6 +31,9 @@ export class User {
   @Column({ nullable: false })
   lname: string = null;
 
+  @Column({ nullable: true })
+  suffix: string | null = null;
+
   @Column({ nullable: false, unique: true })
   email: string = null;
 
