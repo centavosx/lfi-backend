@@ -40,6 +40,11 @@ export class UserInfoDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  suffix?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsEnum(Level)
   level?: Level;
 

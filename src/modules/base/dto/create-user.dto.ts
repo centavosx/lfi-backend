@@ -131,6 +131,11 @@ export class CreateUserDto {
   @IsNotEmpty()
   lname: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  suffix?: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -240,6 +245,11 @@ export class CreateUserFromAdminDto {
   @IsString()
   @IsNotEmpty()
   lname: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  suffix?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
